@@ -149,6 +149,11 @@
   .hist-item .meta{font-size:12px; color:var(--roccia)}
   .hist-item .d{font-size:16px; color:var(--corteccia)}
   .hist-item .fat{font-size:18px; color:var(--terracotta)}
+  .hist-open{flex:1; min-width:0}
+  .hist-right{display:flex; align-items:center; gap:12px; flex:0 0 auto}
+  .hist-del{width:38px; height:38px; flex:0 0 38px; border-radius:10px; border:1px solid var(--linea);
+    background:#fff; font-size:17px; cursor:pointer; color:var(--terracotta); line-height:1}
+  .hist-del:active{background:#F3EEE1}
   .empty{text-align:center; color:var(--roccia); font-family:'Cormorant Garamond',serif;
     font-style:italic; font-size:18px; padding:40px 10px}
 
@@ -499,10 +504,21 @@ function renderHist(){
   const box=$('#hist-list');
   if(!days.length){box.innerHTML='<div class="empty">Nessuna giornata salvata.<br>Compila la scheda e premi “Salva giornata”.</div>';return;}
   box.innerHTML=days.map((d,i)=>`<div class="hist-item" data-i="${i}">
-      <div><div class="d">${fmtDate(d.data)}</div>
+      <div class="hist-open"><div class="d">${fmtDate(d.data)}</div>
       <div class="meta">${d.commessa||'—'} · ${d.pezzi||0} pezzi · ${d.acquirenti||0} clienti · ${d.affluenza||'—'}</div></div>
-      <div class="fat">${eur(d.fatturato||0)}</div></div>`).join('');
-  box.querySelectorAll('.hist-item').forEach(el=>el.onclick=()=>loadDay(days[+el.dataset.i]));
+      <div class="hist-right"><div class="fat">${eur(d.fatturato||0)}</div>
+      <button class="hist-del" data-i="${i}" title="Elimina giornata">🗑</button></div></div>`).join('');
+  box.querySelectorAll('.hist-open').forEach(el=>el.onclick=()=>loadDay(days[+el.closest('.hist-item').dataset.i]));
+  box.querySelectorAll('.hist-del').forEach(b=>b.onclick=e=>{e.stopPropagation();deleteDay(+b.dataset.i);});
+}
+function deleteDay(i){
+  const days=JSON.parse(localStorage.getItem(LS_DAYS)||'[]');
+  const d=days[i]; if(!d)return;
+  if(!confirm('Eliminare la giornata del '+fmtDate(d.data)+'?\nL’operazione non è reversibile.'))return;
+  days.splice(i,1);
+  localStorage.setItem(LS_DAYS,JSON.stringify(days));
+  renderHist();
+  toast('Giornata eliminata');
 }
 function fmtDate(s){if(!s)return'—';const[y,m,d]=s.split('-');return`${d}/${m}/${y}`;}
 function loadDay(d){
