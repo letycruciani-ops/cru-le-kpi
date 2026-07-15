@@ -1,0 +1,16 @@
+{
+  "name": "CRU LE · Scheda KPI Negozio",
+  "short_name": "CRU LE KPI",
+  "description": "Scheda giornaliera KPI e registro clienti del negozio CRU LE.",
+  "start_url": "index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FAF7EF",
+  "theme_color": "#A65F3D",
+  "lang": "it",
+  "icons": [
+    { "src": "icon-180.png", "sizes": "180x180", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

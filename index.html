@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#A65F3D" />
+<title>CRU LE · Scheda KPI Negozio</title>
+
+<!-- ===== Installazione come app (home screen) ===== -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="CRU LE KPI">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tenor+Sans&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --calce:#FAF7EF; --sabbia:#D8C7A8; --roccia:#A89F8F;
+    --terracotta:#A65F3D; --argilla:#C58A72; --oliva:#73715C;
+    --acqua:#6F8F8D; --corteccia:#4B3F34;
+    --linea:#E5DBC7; --ombra:0 2px 14px rgba(75,63,52,.08);
+    --radius:14px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:'Tenor Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    background:var(--calce); color:var(--corteccia);
+    font-size:16px; line-height:1.5; padding-bottom:120px;
+    -webkit-text-size-adjust:100%;
+  }
+  .serif{font-family:'Cormorant Garamond',Georgia,serif}
+
+  /* ---------- Header ---------- */
+  header{
+    position:sticky; top:0; z-index:50;
+    background:var(--calce); border-bottom:1px solid var(--linea);
+    padding:16px 18px 12px;
+  }
+  .brand{font-size:22px; letter-spacing:.34em; text-align:center; color:var(--corteccia)}
+  .brand small{display:block; font-family:'Cormorant Garamond',serif; letter-spacing:.18em;
+    font-size:13px; color:var(--roccia); text-transform:uppercase; margin-top:3px}
+  .tabs{display:flex; gap:8px; margin-top:14px}
+  .tab{
+    flex:1; text-align:center; padding:11px 6px; border-radius:10px;
+    background:transparent; border:1px solid var(--linea); color:var(--oliva);
+    font-size:13.5px; letter-spacing:.04em; cursor:pointer; transition:.15s;
+  }
+  .tab.active{background:var(--terracotta); color:#fff; border-color:var(--terracotta)}
+
+  /* ---------- Layout ---------- */
+  main{max-width:760px; margin:0 auto; padding:18px 16px}
+  .view{display:none} .view.active{display:block}
+  section.card{
+    background:#fff; border:1px solid var(--linea); border-radius:var(--radius);
+    box-shadow:var(--ombra); padding:18px 16px; margin-bottom:18px;
+  }
+  .sec-title{
+    font-size:15px; letter-spacing:.06em; color:var(--terracotta);
+    display:flex; align-items:center; gap:10px; margin:0 0 14px;
+  }
+  .sec-title .n{
+    width:26px; height:26px; flex:0 0 26px; border-radius:50%;
+    background:var(--sabbia); color:var(--corteccia); font-size:14px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .sub{font-family:'Cormorant Garamond',serif; font-style:italic; color:var(--roccia);
+    font-size:15px; margin:-6px 0 14px}
+
+  /* ---------- Fields ---------- */
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+  .grid-3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px}
+  .field{display:flex; flex-direction:column; gap:5px}
+  .field.full{grid-column:1/-1}
+  label{font-size:12px; letter-spacing:.05em; color:var(--oliva); text-transform:uppercase}
+  input,select,textarea{
+    font-family:inherit; font-size:16px; color:var(--corteccia);
+    background:var(--calce); border:1px solid var(--linea); border-radius:10px;
+    padding:12px; width:100%; outline:none; transition:.15s;
+  }
+  input:focus,select:focus,textarea:focus{border-color:var(--argilla); background:#fff}
+  textarea{resize:vertical; min-height:56px}
+  input[readonly]{background:#F3EEE1; color:var(--oliva); font-weight:600}
+  select{appearance:none; background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8'><path d='M1 1l5 5 5-5' fill='none' stroke='%2373715C' stroke-width='1.6'/></svg>");
+    background-repeat:no-repeat; background-position:right 14px center}
+
+  /* ---------- KPI live cards ---------- */
+  .kpi-live{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:4px}
+  .kpi-box{
+    background:linear-gradient(160deg,#fff,#FBF8F0); border:1px solid var(--linea);
+    border-radius:12px; padding:12px 10px; text-align:center;
+  }
+  .kpi-box .v{font-size:22px; color:var(--terracotta); line-height:1.1}
+  .kpi-box .l{font-size:11px; letter-spacing:.03em; color:var(--oliva); margin-top:4px; text-transform:uppercase}
+
+  /* ---------- Dynamic rows ---------- */
+  .rows{display:flex; flex-direction:column; gap:12px}
+  .row-item{
+    border:1px solid var(--linea); border-radius:12px; padding:12px;
+    background:var(--calce); position:relative;
+  }
+  .row-item .del{
+    position:absolute; top:8px; right:8px; width:28px; height:28px; border-radius:50%;
+    border:none; background:#fff; color:var(--terracotta); font-size:17px; cursor:pointer;
+    box-shadow:var(--ombra); line-height:1;
+  }
+  .row-head{font-size:12px; color:var(--roccia); letter-spacing:.05em; margin-bottom:8px}
+
+  /* ---------- Chips ---------- */
+  .chips{display:flex; gap:6px; flex-wrap:wrap}
+  .chip{
+    padding:9px 14px; border-radius:20px; border:1px solid var(--linea);
+    background:#fff; font-size:13.5px; color:var(--oliva); cursor:pointer; transition:.12s;
+  }
+  .chip.on{background:var(--acqua); color:#fff; border-color:var(--acqua)}
+  .chip.on.tc{background:var(--terracotta); border-color:var(--terracotta)}
+  .chip.on.ol{background:var(--oliva); border-color:var(--oliva)}
+
+  /* ---------- Buttons ---------- */
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    border:none; border-radius:12px; padding:14px 18px; font-family:inherit;
+    font-size:15px; letter-spacing:.03em; cursor:pointer; transition:.15s; width:100%;
+  }
+  .btn-add{background:var(--sabbia); color:var(--corteccia)}
+  .btn-add:hover{background:#cdb994}
+  .btn-primary{background:var(--terracotta); color:#fff}
+  .btn-ghost{background:transparent; border:1px solid var(--linea); color:var(--oliva)}
+
+  /* ---------- Sticky action bar ---------- */
+  .actionbar{
+    position:fixed; bottom:0; left:0; right:0; z-index:60;
+    background:rgba(250,247,239,.94); backdrop-filter:blur(8px);
+    border-top:1px solid var(--linea); padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+    display:flex; gap:10px; max-width:760px; margin:0 auto;
+  }
+  .actionbar .btn{width:auto; flex:1}
+
+  /* ---------- History ---------- */
+  .hist-item{
+    display:flex; justify-content:space-between; align-items:center; gap:12px;
+    border:1px solid var(--linea); border-radius:12px; padding:14px; margin-bottom:10px;
+    background:#fff; cursor:pointer;
+  }
+  .hist-item .meta{font-size:12px; color:var(--roccia)}
+  .hist-item .d{font-size:16px; color:var(--corteccia)}
+  .hist-item .fat{font-size:18px; color:var(--terracotta)}
+  .empty{text-align:center; color:var(--roccia); font-family:'Cormorant Garamond',serif;
+    font-style:italic; font-size:18px; padding:40px 10px}
+
+  /* consent */
+  .consent{display:flex; gap:10px; align-items:flex-start; background:#F3EEE1;
+    border-radius:10px; padding:12px; font-size:13px; color:var(--oliva); margin-bottom:12px}
+  .consent input{width:20px; height:20px; flex:0 0 20px; margin-top:2px}
+
+  .toast{
+    position:fixed; bottom:96px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--corteccia); color:var(--calce); padding:12px 22px; border-radius:30px;
+    font-size:14px; opacity:0; pointer-events:none; transition:.3s; z-index:100; box-shadow:var(--ombra);
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+  .hint{font-size:12px; color:var(--roccia); font-family:'Cormorant Garamond',serif; font-style:italic; margin-top:6px}
+  @media(max-width:520px){
+    .grid-3{grid-template-columns:1fr 1fr}
+    .brand{font-size:19px; letter-spacing:.28em}
+  }
+  @media print{
+    header,.actionbar,.tab,.btn,.del,.toast{display:none!important}
+    body{padding:0} .card{box-shadow:none; break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">CRU LE<small>Scheda giornaliera KPI · Negozio</small></div>
+  <div class="tabs">
+    <button class="tab active" data-view="scheda">Scheda del giorno</button>
+    <button class="tab" data-view="clienti">Registro clienti</button>
+    <button class="tab" data-view="storico">Storico</button>
+  </div>
+</header>
+
+<main>
+  <!-- ============ VIEW: SCHEDA ============ -->
+  <div class="view active" id="view-scheda">
+
+    <!-- Intestazione -->
+    <section class="card">
+      <div class="grid">
+        <div class="field"><label>Data</label><input type="date" id="data"></div>
+        <div class="field"><label>Commessa</label><input type="text" id="commessa" placeholder="Nome"></div>
+        <div class="field"><label>Orario / turno</label><input type="text" id="orario" placeholder="es. 10–19"></div>
+        <div class="field"><label>Meteo</label>
+          <select id="meteo">
+            <option value="">—</option><option>☀️ Sole</option><option>⛅ Variabile</option>
+            <option>☁️ Nuvoloso</option><option>🌧️ Pioggia</option><option>🌬️ Vento</option>
+          </select>
+        </div>
+        <div class="field full"><label>Affluenza</label>
+          <div class="chips" data-chip="affluenza">
+            <div class="chip ol" data-val="Bassa">Bassa</div>
+            <div class="chip ol" data-val="Media">Media</div>
+            <div class="chip ol" data-val="Alta">Alta</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 1. Numeri del giorno -->
+    <section class="card">
+      <h2 class="sec-title"><span class="n">1</span> Numeri del giorno</h2>
+      <div class="grid-3">
+        <div class="field"><label>Ingressi</label><input type="number" inputmode="numeric" id="ingressi" min="0" placeholder="0"></div>
+        <div class="field"><label>Clienti acquirenti</label><input type="number" inputmode="numeric" id="acquirenti" min="0" placeholder="0"></div>
+        <div class="field"><label>Pezzi venduti</label><input type="number" id="pezzi" readonly></div>
+      </div>
+      <div class="hint">Pezzi venduti, fatturato e contatti si calcolano da soli dalle sezioni sotto.</div>
+      <div class="kpi-live" style="margin-top:14px">
+        <div class="kpi-box"><div class="v" id="k-fat">€0</div><div class="l">Fatturato</div></div>
+        <div class="kpi-box"><div class="v" id="k-scont">€0</div><div class="l">Scontrino medio</div></div>
+        <div class="kpi-box"><div class="v" id="k-pps">0</div><div class="l">Pezzi/scontrino</div></div>
+        <div class="kpi-box"><div class="v" id="k-conv">0%</div><div class="l">Conversione</div></div>
+        <div class="kpi-box"><div class="v" id="k-cont">0</div><div class="l">Contatti raccolti</div></div>
+        <div class="kpi-box"><div class="v" id="k-mv">0</div><div class="l">Mancate vendite</div></div>
+      </div>
+    </section>
+
+    <!-- 2. Vendite effettuate -->
+    <section class="card">
+      <h2 class="sec-title"><span class="n">2</span> Vendite effettuate</h2>
+      <div class="rows" id="vendite"></div>
+      <button class="btn btn-add" id="add-vendita" style="margin-top:12px">＋ Aggiungi vendita</button>
+    </section>
+
+    <!-- 4. Mancate vendite -->
+    <section class="card">
+      <h2 class="sec-title"><span class="n">3</span> Mancate vendite / richieste non soddisfatte</h2>
+      <div class="rows" id="mancate"></div>
+      <button class="btn btn-add" id="add-mancata" style="margin-top:12px">＋ Aggiungi mancata vendita</button>
+    </section>
+
+    <!-- 5. Chiusura -->
+    <section class="card">
+      <h2 class="sec-title"><span class="n">4</span> Chiusura della giornata</h2>
+      <div class="grid">
+        <div class="field full"><label>Prodotto / taglia più richiesta</label><input type="text" id="c-richiesto" placeholder="es. Intero nero 46"></div>
+        <div class="field full"><label>Motivo n.1 di mancata vendita</label><input type="text" id="c-motivo" placeholder="es. taglia esaurita"></div>
+        <div class="field full"><label>Feedback utile da ricordare</label><textarea id="c-feedback" placeholder="Cosa hanno detto le clienti…"></textarea></div>
+        <div class="field full"><label>Azione per domani</label><textarea id="c-azione" placeholder="Una cosa concreta da fare domani…"></textarea></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ VIEW: CLIENTI ============ -->
+  <div class="view" id="view-clienti">
+    <section class="card">
+      <h2 class="sec-title"><span class="n">♥</span> Registro clienti</h2>
+      <p class="sub">Una scheda per cliente. Annota solo ciò che serve a offrire un servizio migliore — e solo con il suo consenso.</p>
+      <div class="rows" id="clienti"></div>
+      <button class="btn btn-add" id="add-cliente" style="margin-top:12px">＋ Aggiungi cliente</button>
+    </section>
+  </div>
+
+  <!-- ============ VIEW: STORICO ============ -->
+  <div class="view" id="view-storico">
+    <section class="card">
+      <h2 class="sec-title"><span class="n">≡</span> Giornate salvate</h2>
+      <div id="hist-list"></div>
+      <button class="btn btn-ghost" id="export-all" style="margin-top:8px">⬇︎ Esporta tutto (CSV)</button>
+    </section>
+  </div>
+</main>
+
+<div class="actionbar">
+  <button class="btn btn-ghost" id="btn-nuova">Nuova</button>
+  <button class="btn btn-ghost" id="btn-stampa">Stampa / PDF</button>
+  <button class="btn btn-primary" id="btn-salva">Salva giornata</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const LS_DAYS='cruleKpiDays', LS_DRAFT='cruleKpiDraft', LS_CLI='cruleClienti';
+const eur=n=>'€'+(Math.round(n*100)/100).toLocaleString('it-IT',{minimumFractionDigits:0,maximumFractionDigits:2});
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1900);}
+
+/* ---------- Tabs ---------- */
+$$('.tab').forEach(t=>t.onclick=()=>{
+  $$('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');
+  $$('.view').forEach(v=>v.classList.remove('active'));
+  $('#view-'+t.dataset.view).classList.add('active');
+  if(t.dataset.view==='storico')renderHist();
+  window.scrollTo(0,0);
+});
+
+/* ---------- Chips (single select) ---------- */
+function initChips(root){
+  root.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
+    const on=c.classList.contains('on');
+    root.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));
+    if(!on)c.classList.add('on');
+    saveDraft();
+  });
+}
+function chipVal(root){const c=root.querySelector('.chip.on');return c?c.dataset.val:'';}
+function setChip(root,val){root.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x.dataset.val===val));}
+initChips($('[data-chip="affluenza"]'));
+
+/* ---------- Row templates ---------- */
+function venditaRow(d={}){
+  const el=document.createElement('div');el.className='row-item';el.dataset.type='vendita';
+  el.innerHTML=`
+    <button class="del" title="Rimuovi">×</button>
+    <div class="grid">
+      <div class="field"><label>Ora</label><input type="time" data-f="ora" value="${d.ora||''}"></div>
+      <div class="field"><label>Codice</label><input type="text" data-f="codice" placeholder="cod." value="${d.codice||''}"></div>
+      <div class="field full"><label>Articolo / modello / taglia</label><input type="text" data-f="articolo" placeholder="es. Bikini Maestrale · 44" value="${d.articolo||''}"></div>
+      <div class="field"><label>Prezzo €</label><input type="number" inputmode="decimal" data-f="prezzo" min="0" step="0.01" placeholder="0" value="${d.prezzo||''}"></div>
+      <div class="field"><label>&nbsp;</label>
+        <div class="chips" data-onef="tipo">
+          <div class="chip tc ${d.tipo==='Pieno'?'on':''}" data-val="Pieno">Pieno</div>
+          <div class="chip tc ${d.tipo==='Sconto'?'on':''}" data-val="Sconto">Sconto</div>
+        </div></div>
+      <div class="field full"><label>&nbsp;</label>
+        <div class="chips" data-onef="cliente">
+          <div class="chip ${d.cliente==='Nuova'?'on':''}" data-val="Nuova">Nuova cliente</div>
+          <div class="chip ${d.cliente==='Abituale'?'on':''}" data-val="Abituale">Abituale</div>
+        </div></div>
+    </div>`;
+  wireRow(el);return el;
+}
+function mancataRow(d={}){
+  const el=document.createElement('div');el.className='row-item';el.dataset.type='mancata';
+  el.innerHTML=`
+    <button class="del">×</button>
+    <div class="grid">
+      <div class="field full"><label>Prodotto / modello</label><input type="text" data-f="prodotto" value="${d.prodotto||''}"></div>
+      <div class="field"><label>Taglia</label><input type="text" data-f="taglia" value="${d.taglia||''}"></div>
+      <div class="field"><label>Colore</label><input type="text" data-f="colore" value="${d.colore||''}"></div>
+      <div class="field full"><label>Motivo principale</label>
+        <select data-f="motivo">
+          <option value="">—</option>
+          <option ${d.motivo==='Taglia esaurita'?'selected':''}>Taglia esaurita</option>
+          <option ${d.motivo==='Modello non disponibile'?'selected':''}>Modello non disponibile</option>
+          <option ${d.motivo==='Colore non disponibile'?'selected':''}>Colore non disponibile</option>
+          <option ${d.motivo==='Prezzo'?'selected':''}>Prezzo</option>
+          <option ${d.motivo==='Cliente indecisa'?'selected':''}>Cliente indecisa</option>
+          <option ${d.motivo==='Solo curiosità'?'selected':''}>Solo curiosità</option>
+          <option ${d.motivo==='Altro'?'selected':''}>Altro</option>
+        </select></div>
+      <div class="field"><label>Provenienza</label><input type="text" data-f="provenienza" placeholder="Città" value="${d.provenienza||''}"></div>
+      <div class="field"><label>Contatto salvato?</label>
+        <div class="chips" data-onef="contatto">
+          <div class="chip ${d.contatto==='Sì'?'on':''}" data-val="Sì">Sì</div>
+          <div class="chip ${d.contatto==='No'?'on':''}" data-val="No">No</div>
+        </div></div>
+      <div class="field full"><label>Nota / follow-up</label><input type="text" data-f="nota" value="${d.nota||''}"></div>
+    </div>`;
+  wireRow(el);return el;
+}
+function clienteRow(d={}){
+  const el=document.createElement('div');el.className='row-item';el.dataset.type='cliente';
+  el.innerHTML=`
+    <button class="del">×</button>
+    <div class="consent"><input type="checkbox" data-f="consenso" ${d.consenso?'checked':''}>
+      <span>La cliente ha dato il <b>consenso</b> a essere ricontattata. Salvare solo con consenso.</span></div>
+    <div class="grid">
+      <div class="field"><label>Data</label><input type="date" data-f="data" value="${d.data||new Date().toISOString().slice(0,10)}"></div>
+      <div class="field"><label>Nome</label><input type="text" data-f="nome" value="${d.nome||''}"></div>
+      <div class="field full"><label>Contatto (WhatsApp / e-mail / tel)</label><input type="text" data-f="contatto" value="${d.contatto||''}"></div>
+      <div class="field"><label>Taglie (top/slip/intero)</label><input type="text" data-f="taglie" placeholder="es. 44 / 46 / 46" value="${d.taglie||''}"></div>
+      <div class="field"><label>Stato cliente</label>
+        <select data-f="stato">
+          <option ${!d.stato?'selected':''} value="">—</option>
+          <option ${d.stato==='Nuova'?'selected':''}>Nuova</option>
+          <option ${d.stato==='Abituale'?'selected':''}>Abituale</option>
+          <option ${d.stato==='VIP'?'selected':''}>VIP</option>
+        </select></div>
+      <div class="field full"><label>Preferenze</label><input type="text" data-f="preferenze" placeholder="bikini/intero, vita alta, colori neutri…" value="${d.preferenze||''}"></div>
+      <div class="field full"><label>Bisogni / vestibilità</label><input type="text" data-f="bisogni" placeholder="sostegno seno, copertura pancia, comodità…" value="${d.bisogni||''}"></div>
+      <div class="field full"><label>Acquisti effettuati</label><input type="text" data-f="acquisti" value="${d.acquisti||''}"></div>
+      <div class="field"><label>Provenienza (città)</label><input type="text" data-f="provenienza" value="${d.provenienza||''}"></div>
+      <div class="field"><label>Come ci ha conosciuto</label><input type="text" data-f="canale" placeholder="IG, Bagno, ads…" value="${d.canale||''}"></div>
+      <div class="field full"><label>Follow-up / quando ricontattare</label><input type="text" data-f="followup" placeholder="data + motivo concreto" value="${d.followup||''}"></div>
+    </div>`;
+  wireRow(el);return el;
+}
+function wireRow(el){
+  el.querySelector('.del').onclick=()=>{el.remove();recalc();saveDraft();saveClienti();};
+  el.querySelectorAll('[data-onef]').forEach(g=>g.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
+    const on=c.classList.contains('on');
+    g.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));
+    if(!on)c.classList.add('on');
+    recalc();saveDraft();
+  }));
+  el.querySelectorAll('input,select,textarea').forEach(i=>i.addEventListener('input',()=>{recalc();saveDraft();saveClienti();}));
+}
+
+/* ---------- Add buttons ---------- */
+$('#add-vendita').onclick=()=>{$('#vendite').appendChild(venditaRow());saveDraft();};
+$('#add-mancata').onclick=()=>{$('#mancate').appendChild(mancataRow());saveDraft();};
+$('#add-cliente').onclick=()=>{$('#clienti').appendChild(clienteRow());saveClienti();};
+
+/* ---------- Collect ---------- */
+function rowData(el){const o={};el.querySelectorAll('[data-f]').forEach(i=>{o[i.dataset.f]=i.type==='checkbox'?i.checked:i.value;});
+  el.querySelectorAll('[data-onef]').forEach(g=>{const c=g.querySelector('.chip.on');o[g.dataset.onef]=c?c.dataset.val:'';});return o;}
+function getScheda(){
+  return {
+    data:$('#data').value, commessa:$('#commessa').value, orario:$('#orario').value,
+    meteo:$('#meteo').value, affluenza:chipVal($('[data-chip="affluenza"]')),
+    ingressi:+$('#ingressi').value||0, acquirenti:+$('#acquirenti').value||0,
+    vendite:$$('#vendite .row-item').map(rowData),
+    mancate:$$('#mancate .row-item').map(rowData),
+    chiusura:{richiesto:$('#c-richiesto').value,motivo:$('#c-motivo').value,feedback:$('#c-feedback').value,azione:$('#c-azione').value}
+  };
+}
+
+/* ---------- Recalc KPIs ---------- */
+function recalc(){
+  const vend=$$('#vendite .row-item').map(rowData);
+  const pezzi=vend.length;
+  const fat=vend.reduce((s,v)=>s+(+v.prezzo||0),0);
+  const acq=+$('#acquirenti').value||0;
+  const ing=+$('#ingressi').value||0;
+  const cont=$$('#clienti .row-item').filter(el=>el.querySelector('[data-f="nome"]').value.trim()||el.querySelector('[data-f="contatto"]').value.trim()).length;
+  const mv=$$('#mancate .row-item').length;
+  $('#pezzi').value=pezzi;
+  $('#k-fat').textContent=eur(fat);
+  $('#k-scont').textContent=acq?eur(fat/acq):'€0';
+  $('#k-pps').textContent=acq?(pezzi/acq).toFixed(1):'0';
+  $('#k-conv').textContent=ing?Math.round(acq/ing*100)+'%':'0%';
+  $('#k-cont').textContent=cont;
+  $('#k-mv').textContent=mv;
+}
+['ingressi','acquirenti'].forEach(id=>$('#'+id).addEventListener('input',()=>{recalc();saveDraft();}));
+['c-richiesto','c-motivo','c-feedback','c-azione','commessa','orario','data'].forEach(id=>$('#'+id).addEventListener('input',saveDraft));
+$('#meteo').addEventListener('change',saveDraft);
+
+/* ---------- Draft persistence ---------- */
+function saveDraft(){recalc();localStorage.setItem(LS_DRAFT,JSON.stringify(getScheda()));}
+function loadDraft(){
+  const d=JSON.parse(localStorage.getItem(LS_DRAFT)||'null');
+  $('#data').value=(d&&d.data)||new Date().toISOString().slice(0,10);
+  if(d){
+    $('#commessa').value=d.commessa||'';$('#orario').value=d.orario||'';$('#meteo').value=d.meteo||'';
+    setChip($('[data-chip="affluenza"]'),d.affluenza);
+    $('#ingressi').value=d.ingressi||'';$('#acquirenti').value=d.acquirenti||'';
+    (d.vendite||[]).forEach(v=>$('#vendite').appendChild(venditaRow(v)));
+    (d.mancate||[]).forEach(v=>$('#mancate').appendChild(mancataRow(v)));
+    if(d.chiusura){$('#c-richiesto').value=d.chiusura.richiesto||'';$('#c-motivo').value=d.chiusura.motivo||'';$('#c-feedback').value=d.chiusura.feedback||'';$('#c-azione').value=d.chiusura.azione||'';}
+  }
+  if(!$$('#vendite .row-item').length)$('#vendite').appendChild(venditaRow());
+  recalc();
+}
+
+/* ---------- Clienti persistence (permanent registry) ---------- */
+function saveClienti(){const arr=$$('#clienti .row-item').map(rowData);localStorage.setItem(LS_CLI,JSON.stringify(arr));recalc();}
+function loadClienti(){const arr=JSON.parse(localStorage.getItem(LS_CLI)||'[]');arr.forEach(c=>$('#clienti').appendChild(clienteRow(c)));if(!arr.length)$('#clienti').appendChild(clienteRow());}
+
+/* ---------- Save day ---------- */
+$('#btn-salva').onclick=()=>{
+  const s=getScheda();
+  if(!s.data){toast('Inserisci la data');return;}
+  const vend=s.vendite;const fat=vend.reduce((a,v)=>a+(+v.prezzo||0),0);
+  s.fatturato=fat;s.pezzi=vend.length;s.savedAt=new Date().toISOString();
+  const days=JSON.parse(localStorage.getItem(LS_DAYS)||'[]');
+  const i=days.findIndex(d=>d.data===s.data);
+  if(i>=0)days[i]=s;else days.push(s);
+  days.sort((a,b)=>b.data.localeCompare(a.data));
+  localStorage.setItem(LS_DAYS,JSON.stringify(days));
+  toast('Giornata salvata ✓');
+};
+
+/* ---------- New ---------- */
+$('#btn-nuova').onclick=()=>{
+  if(!confirm('Iniziare una nuova scheda? I dati non salvati del giorno andranno persi (il registro clienti resta).'))return;
+  localStorage.removeItem(LS_DRAFT);
+  $('#vendite').innerHTML='';$('#mancate').innerHTML='';
+  ['commessa','orario','ingressi','acquirenti','c-richiesto','c-motivo','c-feedback','c-azione'].forEach(id=>$('#'+id).value='');
+  $('#meteo').value='';setChip($('[data-chip="affluenza"]'),'');
+  $('#data').value=new Date().toISOString().slice(0,10);
+  $('#vendite').appendChild(venditaRow());recalc();saveDraft();toast('Nuova scheda');
+};
+
+/* ---------- Print ---------- */
+$('#btn-stampa').onclick=()=>window.print();
+
+/* ---------- History ---------- */
+function renderHist(){
+  const days=JSON.parse(localStorage.getItem(LS_DAYS)||'[]');
+  const box=$('#hist-list');
+  if(!days.length){box.innerHTML='<div class="empty">Nessuna giornata salvata.<br>Compila la scheda e premi “Salva giornata”.</div>';return;}
+  box.innerHTML=days.map((d,i)=>`<div class="hist-item" data-i="${i}">
+      <div><div class="d">${fmtDate(d.data)}</div>
+      <div class="meta">${d.commessa||'—'} · ${d.pezzi||0} pezzi · ${d.acquirenti||0} clienti · ${d.affluenza||'—'}</div></div>
+      <div class="fat">${eur(d.fatturato||0)}</div></div>`).join('');
+  box.querySelectorAll('.hist-item').forEach(el=>el.onclick=()=>loadDay(days[+el.dataset.i]));
+}
+function fmtDate(s){if(!s)return'—';const[y,m,d]=s.split('-');return`${d}/${m}/${y}`;}
+function loadDay(d){
+  if(!confirm('Aprire la scheda del '+fmtDate(d.data)+'? Sostituirà la scheda attuale.'))return;
+  localStorage.setItem(LS_DRAFT,JSON.stringify(d));
+  $('#vendite').innerHTML='';$('#mancate').innerHTML='';
+  location.reload();
+}
+
+/* ---------- Export CSV ---------- */
+$('#export-all').onclick=()=>{
+  const days=JSON.parse(localStorage.getItem(LS_DAYS)||'[]');
+  if(!days.length){toast('Niente da esportare');return;}
+  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+  let csv='Data;Commessa;Orario;Meteo;Affluenza;Ingressi;Clienti acquirenti;Pezzi venduti;Fatturato;Scontrino medio;Pezzi per scontrino;Conversione %;Mancate vendite;Prodotto piu richiesto;Motivo n.1 mancata;Feedback;Azione domani\n';
+  days.forEach(d=>{
+    const acq=d.acquirenti||0,ing=d.ingressi||0,fat=d.fatturato||0,pz=d.pezzi||0;
+    csv+=[d.data,d.commessa,d.orario,d.meteo,d.affluenza,ing,acq,pz,fat.toFixed(2),
+      acq?(fat/acq).toFixed(2):'',acq?(pz/acq).toFixed(1):'',ing?Math.round(acq/ing*100):'',
+      (d.mancate||[]).length,d.chiusura?.richiesto,d.chiusura?.motivo,d.chiusura?.feedback,d.chiusura?.azione
+    ].map(q).join(';')+'\n';
+  });
+  dl(csv,'CRU_LE_KPI_'+new Date().toISOString().slice(0,10)+'.csv');
+  toast('CSV esportato ✓');
+};
+function dl(text,name){
+  const blob=new Blob(['﻿'+text],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();
+}
+
+/* ---------- Init ---------- */
+loadDraft();loadClienti();
+
+/* ---------- Offline (service worker) ---------- */
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
