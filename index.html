@@ -198,7 +198,6 @@
     <section class="card">
       <div class="grid">
         <div class="field"><label>Data</label><input type="date" id="data"></div>
-        <div class="field"><label>Commessa</label><input type="text" id="commessa" placeholder="Nome"></div>
         <div class="field"><label>Orario / turno</label><input type="text" id="orario" placeholder="es. 10–19"></div>
         <div class="field"><label>Meteo</label>
           <select id="meteo">
@@ -417,7 +416,7 @@ function rowData(el){const o={};el.querySelectorAll('[data-f]').forEach(i=>{o[i.
   el.querySelectorAll('[data-onef]').forEach(g=>{const c=g.querySelector('.chip.on');o[g.dataset.onef]=c?c.dataset.val:'';});return o;}
 function getScheda(){
   return {
-    data:$('#data').value, commessa:$('#commessa').value, orario:$('#orario').value,
+    data:$('#data').value, orario:$('#orario').value,
     meteo:$('#meteo').value, affluenza:chipVal($('[data-chip="affluenza"]')),
     ingressi:+$('#ingressi').value||0, acquirenti:+$('#acquirenti').value||0,
     vendite:$$('#vendite .row-item').map(rowData),
@@ -446,7 +445,7 @@ function recalc(){
   $('#k-mv').textContent=mv;
 }
 ['ingressi','acquirenti'].forEach(id=>$('#'+id).addEventListener('input',()=>{recalc();saveDraft();}));
-['c-richiesto','c-motivo','c-feedback','c-azione','commessa','orario','data'].forEach(id=>$('#'+id).addEventListener('input',saveDraft));
+['c-richiesto','c-motivo','c-feedback','c-azione','orario','data'].forEach(id=>$('#'+id).addEventListener('input',saveDraft));
 $('#meteo').addEventListener('change',saveDraft);
 
 /* ---------- Draft persistence ---------- */
@@ -455,7 +454,7 @@ function loadDraft(){
   const d=JSON.parse(localStorage.getItem(LS_DRAFT)||'null');
   $('#data').value=(d&&d.data)||new Date().toISOString().slice(0,10);
   if(d){
-    $('#commessa').value=d.commessa||'';$('#orario').value=d.orario||'';$('#meteo').value=d.meteo||'';
+    $('#orario').value=d.orario||'';$('#meteo').value=d.meteo||'';
     setChip($('[data-chip="affluenza"]'),d.affluenza);
     $('#ingressi').value=d.ingressi||'';$('#acquirenti').value=d.acquirenti||'';
     (d.vendite||[]).forEach(v=>$('#vendite').appendChild(venditaRow(v)));
@@ -489,7 +488,7 @@ $('#btn-nuova').onclick=()=>{
   if(!confirm('Iniziare una nuova scheda? I dati non salvati del giorno andranno persi (il registro clienti resta).'))return;
   localStorage.removeItem(LS_DRAFT);
   $('#vendite').innerHTML='';$('#mancate').innerHTML='';
-  ['commessa','orario','ingressi','acquirenti','c-richiesto','c-motivo','c-feedback','c-azione'].forEach(id=>$('#'+id).value='');
+  ['orario','ingressi','acquirenti','c-richiesto','c-motivo','c-feedback','c-azione'].forEach(id=>$('#'+id).value='');
   $('#meteo').value='';setChip($('[data-chip="affluenza"]'),'');
   $('#data').value=new Date().toISOString().slice(0,10);
   $('#vendite').appendChild(venditaRow());recalc();saveDraft();toast('Nuova scheda');
@@ -505,7 +504,7 @@ function renderHist(){
   if(!days.length){box.innerHTML='<div class="empty">Nessuna giornata salvata.<br>Compila la scheda e premi “Salva giornata”.</div>';return;}
   box.innerHTML=days.map((d,i)=>`<div class="hist-item" data-i="${i}">
       <div class="hist-open"><div class="d">${fmtDate(d.data)}</div>
-      <div class="meta">${d.commessa||'—'} · ${d.pezzi||0} pezzi · ${d.acquirenti||0} clienti · ${d.affluenza||'—'}</div></div>
+      <div class="meta">${d.orario||'—'} · ${d.pezzi||0} pezzi · ${d.acquirenti||0} clienti · ${d.affluenza||'—'}</div></div>
       <div class="hist-right"><div class="fat">${eur(d.fatturato||0)}</div>
       <button class="hist-del" data-i="${i}" title="Elimina giornata">🗑</button></div></div>`).join('');
   box.querySelectorAll('.hist-open').forEach(el=>el.onclick=()=>loadDay(days[+el.closest('.hist-item').dataset.i]));
@@ -533,10 +532,10 @@ $('#export-all').onclick=()=>{
   const days=JSON.parse(localStorage.getItem(LS_DAYS)||'[]');
   if(!days.length){toast('Niente da esportare');return;}
   const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
-  let csv='Data;Commessa;Orario;Meteo;Affluenza;Ingressi;Clienti acquirenti;Pezzi venduti;Fatturato;Scontrino medio;Pezzi per scontrino;Conversione %;Mancate vendite;Prodotto piu richiesto;Motivo n.1 mancata;Feedback;Azione domani\n';
+  let csv='Data;Orario;Meteo;Affluenza;Ingressi;Clienti acquirenti;Pezzi venduti;Fatturato;Scontrino medio;Pezzi per scontrino;Conversione %;Mancate vendite;Prodotto piu richiesto;Motivo n.1 mancata;Feedback;Azione domani\n';
   days.forEach(d=>{
     const acq=d.acquirenti||0,ing=d.ingressi||0,fat=d.fatturato||0,pz=d.pezzi||0;
-    csv+=[d.data,d.commessa,d.orario,d.meteo,d.affluenza,ing,acq,pz,fat.toFixed(2),
+    csv+=[d.data,d.orario,d.meteo,d.affluenza,ing,acq,pz,fat.toFixed(2),
       acq?(fat/acq).toFixed(2):'',acq?(pz/acq).toFixed(1):'',ing?Math.round(acq/ing*100):'',
       (d.mancate||[]).length,d.chiusura?.richiesto,d.chiusura?.motivo,d.chiusura?.feedback,d.chiusura?.azione
     ].map(q).join(';')+'\n';
