@@ -1,5 +1,5 @@
 /* CRU LE KPI · service worker per uso offline */
-const CACHE = 'crule-kpi-v4';
+const CACHE = 'crule-kpi-v5';
 const ASSETS = [
   './',
   'index.html',
