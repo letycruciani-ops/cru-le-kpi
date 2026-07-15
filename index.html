@@ -422,8 +422,10 @@ function getScheda(){
 }
 
 /* ---------- Recalc KPIs ---------- */
+// una riga conta come pezzo venduto solo se compilata (articolo, codice o prezzo)
+const isVendita=v=>!!((v.articolo&&v.articolo.trim())||(v.codice&&v.codice.trim())||(+v.prezzo>0));
 function recalc(){
-  const vend=$$('#vendite .row-item').map(rowData);
+  const vend=$$('#vendite .row-item').map(rowData).filter(isVendita);
   const pezzi=vend.length;
   const fat=vend.reduce((s,v)=>s+(+v.prezzo||0),0);
   const acq=+$('#acquirenti').value||0;
@@ -467,7 +469,7 @@ function loadClienti(){const arr=JSON.parse(localStorage.getItem(LS_CLI)||'[]');
 $('#btn-salva').onclick=()=>{
   const s=getScheda();
   if(!s.data){toast('Inserisci la data');return;}
-  const vend=s.vendite;const fat=vend.reduce((a,v)=>a+(+v.prezzo||0),0);
+  const vend=s.vendite.filter(isVendita);const fat=vend.reduce((a,v)=>a+(+v.prezzo||0),0);
   s.fatturato=fat;s.pezzi=vend.length;s.savedAt=new Date().toISOString();
   const days=JSON.parse(localStorage.getItem(LS_DAYS)||'[]');
   const i=days.findIndex(d=>d.data===s.data);
