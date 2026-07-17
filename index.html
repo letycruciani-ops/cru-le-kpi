@@ -164,6 +164,19 @@
     border-radius:10px; padding:12px; font-size:13px; color:var(--oliva); margin-bottom:12px}
   .consent input{width:20px; height:20px; flex:0 0 20px; margin-top:2px}
 
+  /* ---------- Backup ---------- */
+  .bk{display:flex; align-items:center; gap:12px; border:1px solid var(--linea);
+    border-radius:12px; padding:14px; background:var(--calce)}
+  .bk .dot{width:10px; height:10px; flex:0 0 10px; border-radius:50%; background:var(--acqua)}
+  .bk.warn{background:#FBF1EA; border-color:var(--argilla)}
+  .bk.warn .dot{background:var(--terracotta)}
+  .bk .t{font-size:14px; color:var(--corteccia)}
+  .bk .s{font-size:12px; color:var(--roccia); margin-top:2px}
+  .bk-nudge{display:flex; gap:10px; align-items:flex-start; background:#FBF1EA;
+    border:1px solid var(--argilla); border-radius:12px; padding:14px; margin-bottom:16px}
+  .bk-nudge .x{margin-left:auto; background:none; border:none; color:var(--roccia);
+    font-size:18px; cursor:pointer; line-height:1; padding:0 2px}
+
   .toast{
     position:fixed; bottom:96px; left:50%; transform:translateX(-50%) translateY(20px);
     background:var(--corteccia); color:var(--calce); padding:12px 22px; border-radius:30px;
@@ -283,7 +296,15 @@
     <section class="card">
       <h2 class="sec-title"><span class="n">≡</span> Giornate salvate</h2>
       <div id="hist-list"></div>
-      <button class="btn btn-ghost" id="export-all" style="margin-top:8px">⬇︎ Esporta tutto (CSV)</button>
+      <button class="btn btn-ghost" id="export-all" style="margin-top:8px">⬇︎ Esporta giornate (CSV)</button>
+    </section>
+
+    <section class="card">
+      <h2 class="sec-title"><span class="n">↓</span> Copia di sicurezza</h2>
+      <p class="sub">I dati vivono solo su questo telefono. Scarica il backup ogni tanto e mettilo su Drive: se il telefono si perde, le clienti non si perdono.</p>
+      <div id="backup-state"></div>
+      <button class="btn btn-primary" id="export-clienti" style="margin-top:12px">⬇︎ Scarica registro clienti (CSV)</button>
+      <button class="btn btn-ghost" id="export-tutto" style="margin-top:8px">⬇︎ Scarica tutto (giornate + clienti)</button>
     </section>
   </div>
 </main>
@@ -298,7 +319,9 @@
 
 <script>
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-const LS_DAYS='cruleKpiDays', LS_DRAFT='cruleKpiDraft', LS_CLI='cruleClienti';
+const LS_DAYS='cruleKpiDays', LS_DRAFT='cruleKpiDraft', LS_CLI='cruleClienti', LS_BK='cruleLastBackup';
+// data di oggi in orario italiano (evita il salto a "ieri" dopo mezzanotte con toISOString/UTC)
+const oggiIT=()=>{const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
 const eur=n=>'€'+(Math.round(n*100)/100).toLocaleString('it-IT',{minimumFractionDigits:0,maximumFractionDigits:2});
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1900);}
 
@@ -307,7 +330,7 @@ $$('.tab').forEach(t=>t.onclick=()=>{
   $$('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');
   $$('.view').forEach(v=>v.classList.remove('active'));
   $('#view-'+t.dataset.view).classList.add('active');
-  if(t.dataset.view==='storico')renderHist();
+  if(t.dataset.view==='storico'){renderHist();renderBackupState();}
   window.scrollTo(0,0);
 });
 
@@ -383,7 +406,7 @@ function clienteRow(d={}){
     <div class="consent"><input type="checkbox" data-f="consenso" ${d.consenso?'checked':''}>
       <span>La cliente ha dato il <b>consenso</b> a essere ricontattata. Salvare solo con consenso.</span></div>
     <div class="grid">
-      <div class="field"><label>Data</label><input type="date" data-f="data" value="${d.data||new Date().toISOString().slice(0,10)}"></div>
+      <div class="field"><label>Data</label><input type="date" data-f="data" value="${d.data||oggiIT()}"></div>
       <div class="field"><label>Nome</label><input type="text" data-f="nome" value="${d.nome||''}"></div>
       <div class="field full"><label>Contatto (WhatsApp / e-mail / tel)</label><input type="text" data-f="contatto" value="${d.contatto||''}"></div>
       <div class="field"><label>Taglie (top/slip/intero)</label><input type="text" data-f="taglie" placeholder="es. 44 / 46 / 46" value="${d.taglie||''}"></div>
@@ -460,7 +483,7 @@ $('#meteo').addEventListener('change',saveDraft);
 function saveDraft(){recalc();localStorage.setItem(LS_DRAFT,JSON.stringify(getScheda()));}
 function loadDraft(){
   const d=JSON.parse(localStorage.getItem(LS_DRAFT)||'null');
-  $('#data').value=(d&&d.data)||new Date().toISOString().slice(0,10);
+  $('#data').value=(d&&d.data)||oggiIT();
   if(d){
     $('#orario').value=d.orario||'';$('#meteo').value=d.meteo||'';
     setChip($('[data-chip="affluenza"]'),d.affluenza);
@@ -498,7 +521,7 @@ $('#btn-nuova').onclick=()=>{
   $('#vendite').innerHTML='';$('#mancate').innerHTML='';
   ['orario','ingressi','acquirenti','c-richiesto','c-motivo','c-feedback','c-azione'].forEach(id=>$('#'+id).value='');
   $('#meteo').value='';setChip($('[data-chip="affluenza"]'),'');
-  $('#data').value=new Date().toISOString().slice(0,10);
+  $('#data').value=oggiIT();
   $('#vendite').appendChild(venditaRow());recalc();saveDraft();toast('Nuova scheda');
 };
 
@@ -556,8 +579,68 @@ function dl(text,name){
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();
 }
 
+/* ---------- Backup registro clienti ---------- */
+function csvClienti(){
+  const arr=JSON.parse(localStorage.getItem(LS_CLI)||'[]')
+    .filter(c=>(c.nome||'').trim()||(c.contatto||'').trim());
+  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+  const cols=[['data','Data'],['nome','Nome'],['contatto','Contatto'],['taglie','Taglie'],
+    ['stato','Stato'],['preferenze','Preferenze'],['bisogni','Bisogni'],['acquisti','Acquisti'],
+    ['provenienza','Provenienza'],['canale','Come ci ha conosciuto'],['followup','Follow-up'],
+    ['consenso','Consenso']];
+  let csv=cols.map(c=>c[1]).join(';')+'\n';
+  arr.forEach(c=>{csv+=cols.map(col=>q(col[0]==='consenso'?(c.consenso?'Sì':'No'):c[col[0]])).join(';')+'\n';});
+  return {csv,n:arr.length};
+}
+function markBackup(){localStorage.setItem(LS_BK,oggiIT());renderBackupState();$('#bk-nudge')&&$('#bk-nudge').remove();}
+
+$('#export-clienti').onclick=()=>{
+  const {csv,n}=csvClienti();
+  if(!n){toast('Nessuna cliente da salvare');return;}
+  dl(csv,'CRU_LE_clienti_'+oggiIT()+'.csv');
+  markBackup();toast(n+' clienti salvate ✓');
+};
+$('#export-tutto').onclick=()=>{
+  const days=JSON.parse(localStorage.getItem(LS_DAYS)||'[]');
+  $('#export-all').click();           // riusa l'export giornate esistente
+  const {csv,n}=csvClienti();
+  if(n)dl(csv,'CRU_LE_clienti_'+oggiIT()+'.csv');
+  markBackup();
+};
+
+/* Stato "ultimo backup" + promemoria dolce ogni 7 giorni */
+function giorniDa(iso){if(!iso)return null;const a=new Date(iso+'T12:00'),b=new Date(oggiIT()+'T12:00');return Math.round((b-a)/86400000);}
+function renderBackupState(){
+  const box=$('#backup-state');if(!box)return;
+  const {n}=csvClienti();const last=localStorage.getItem(LS_BK);const g=giorniDa(last);
+  const stale=g===null||g>=7;
+  box.innerHTML=`<div class="bk ${stale&&n?'warn':''}"><div class="dot"></div><div>
+    <div class="t">${n} client${n===1?'e':'i'} nel registro</div>
+    <div class="s">${last?('Ultimo backup: '+fmtDate(last)+(g?` · ${g} giorn${g===1?'o':'i'} fa`:' · oggi')):'Backup mai fatto'}</div>
+  </div></div>`;
+}
+function maybeNudge(){
+  const {n}=csvClienti();if(!n)return;
+  const g=giorniDa(localStorage.getItem(LS_BK));
+  if(g!==null&&g<7)return;
+  if(sessionStorage.getItem('bkNudgeChiuso'))return;
+  const host=$('#view-scheda');if(!host||$('#bk-nudge'))return;
+  const el=document.createElement('div');el.className='bk-nudge';el.id='bk-nudge';
+  el.innerHTML=`<span>💾</span><div><b>Fai una copia del registro clienti.</b>
+    <div class="s" style="color:var(--roccia);font-size:12px;margin-top:2px">
+    ${g===null?'Non hai mai scaricato il backup.':'Ultimo backup '+g+' giorni fa.'} Bastano 5 secondi.</div>
+    <button class="btn btn-primary" style="margin-top:10px;width:auto;padding:10px 16px" id="bk-nudge-go">Scarica ora</button></div>
+    <button class="x" id="bk-nudge-x" title="Più tardi">×</button>`;
+  host.insertBefore(el,host.firstChild);
+  $('#bk-nudge-go').onclick=()=>{$$('.tab').forEach(x=>x.classList.remove('active'));
+    $('.tab[data-view="storico"]').classList.add('active');
+    $$('.view').forEach(v=>v.classList.remove('active'));$('#view-storico').classList.add('active');
+    renderBackupState();$('#export-clienti').click();window.scrollTo(0,0);};
+  $('#bk-nudge-x').onclick=()=>{sessionStorage.setItem('bkNudgeChiuso','1');el.remove();};
+}
+
 /* ---------- Init ---------- */
-loadDraft();loadClienti();
+loadDraft();loadClienti();renderBackupState();maybeNudge();
 
 /* ---------- Offline (service worker) ---------- */
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
