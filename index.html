@@ -44,9 +44,9 @@
   .brand{font-size:22px; letter-spacing:.34em; text-align:center; color:var(--corteccia)}
   .brand small{display:block; font-family:'Cormorant Garamond',serif; letter-spacing:.18em;
     font-size:13px; color:var(--roccia); text-transform:uppercase; margin-top:3px}
-  .tabs{display:flex; gap:8px; margin-top:14px}
+  .tabs{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px}
   .tab{
-    flex:1; text-align:center; padding:11px 6px; border-radius:10px;
+    flex:1 1 40%; text-align:center; padding:11px 6px; border-radius:10px;
     background:transparent; border:1px solid var(--linea); color:var(--oliva);
     font-size:13.5px; letter-spacing:.04em; cursor:pointer; transition:.15s;
   }
@@ -164,6 +164,25 @@
     border-radius:10px; padding:12px; font-size:13px; color:var(--oliva); margin-bottom:12px}
   .consent input{width:20px; height:20px; flex:0 0 20px; margin-top:2px}
 
+  /* ---------- QR recensioni ---------- */
+  .qr-wrap{display:inline-block; padding:16px; background:#fff; border:1px solid var(--linea);
+    border-radius:16px; box-shadow:var(--ombra); margin:6px auto 4px}
+  #qr-img{display:block; width:240px; height:240px; image-rendering:pixelated}
+  .qr-cta{font-size:18px; color:var(--corteccia); line-height:1.5; margin:14px 0 16px}
+
+  /* ---------- Backup ---------- */
+  .bk{display:flex; align-items:center; gap:12px; border:1px solid var(--linea);
+    border-radius:12px; padding:14px; background:var(--calce)}
+  .bk .dot{width:10px; height:10px; flex:0 0 10px; border-radius:50%; background:var(--acqua)}
+  .bk.warn{background:#FBF1EA; border-color:var(--argilla)}
+  .bk.warn .dot{background:var(--terracotta)}
+  .bk .t{font-size:14px; color:var(--corteccia)}
+  .bk .s{font-size:12px; color:var(--roccia); margin-top:2px}
+  .bk-nudge{display:flex; gap:10px; align-items:flex-start; background:#FBF1EA;
+    border:1px solid var(--argilla); border-radius:12px; padding:14px; margin-bottom:16px}
+  .bk-nudge .x{margin-left:auto; background:none; border:none; color:var(--roccia);
+    font-size:18px; cursor:pointer; line-height:1; padding:0 2px}
+
   .toast{
     position:fixed; bottom:96px; left:50%; transform:translateX(-50%) translateY(20px);
     background:var(--corteccia); color:var(--calce); padding:12px 22px; border-radius:30px;
@@ -195,6 +214,7 @@
     <button class="tab active" data-view="scheda">Scheda del giorno</button>
     <button class="tab" data-view="clienti">Registro clienti</button>
     <button class="tab" data-view="storico">Storico</button>
+    <button class="tab" data-view="recensioni">⭐ Recensioni</button>
   </div>
 </header>
 
@@ -283,7 +303,27 @@
     <section class="card">
       <h2 class="sec-title"><span class="n">≡</span> Giornate salvate</h2>
       <div id="hist-list"></div>
-      <button class="btn btn-ghost" id="export-all" style="margin-top:8px">⬇︎ Esporta tutto (CSV)</button>
+      <button class="btn btn-ghost" id="export-all" style="margin-top:8px">⬇︎ Esporta giornate (CSV)</button>
+    </section>
+
+    <section class="card">
+      <h2 class="sec-title"><span class="n">↓</span> Copia di sicurezza</h2>
+      <p class="sub">I dati vivono solo su questo telefono. Scarica il backup ogni tanto e mettilo su Drive: se il telefono si perde, le clienti non si perdono.</p>
+      <div id="backup-state"></div>
+      <button class="btn btn-primary" id="export-clienti" style="margin-top:12px">⬇︎ Scarica registro clienti (CSV)</button>
+      <button class="btn btn-ghost" id="export-tutto" style="margin-top:8px">⬇︎ Scarica tutto (giornate + clienti)</button>
+    </section>
+  </div>
+
+  <!-- ============ VIEW: RECENSIONI ============ -->
+  <div class="view" id="view-recensioni">
+    <section class="card" style="text-align:center">
+      <h2 class="sec-title" style="justify-content:center"><span class="n">⭐</span> Lascia una recensione</h2>
+      <p class="sub" style="text-align:center">Gira lo schermo verso la cliente.<br>Inquadra il codice con la fotocamera del telefono.</p>
+      <div class="qr-wrap"><img id="qr-img" alt="QR recensioni CRU LE su Google" width="240" height="240"></div>
+      <p class="qr-cta serif">Grazie per aver scelto <b>CRU&nbsp;LE</b> ♥<br>Il tuo racconto aiuta chi cerca autenticità.</p>
+      <a class="btn btn-primary" id="apri-recensione" href="#" target="_blank" rel="noopener" style="margin-top:6px">Apri direttamente su questo telefono</a>
+      <p class="hint">Il codice porta alla pagina Google di CRU LE. Poi basta toccare le stelline.</p>
     </section>
   </div>
 </main>
@@ -298,7 +338,9 @@
 
 <script>
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-const LS_DAYS='cruleKpiDays', LS_DRAFT='cruleKpiDraft', LS_CLI='cruleClienti';
+const LS_DAYS='cruleKpiDays', LS_DRAFT='cruleKpiDraft', LS_CLI='cruleClienti', LS_BK='cruleLastBackup';
+// data di oggi in orario italiano (evita il salto a "ieri" dopo mezzanotte con toISOString/UTC)
+const oggiIT=()=>{const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
 const eur=n=>'€'+(Math.round(n*100)/100).toLocaleString('it-IT',{minimumFractionDigits:0,maximumFractionDigits:2});
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1900);}
 
@@ -307,7 +349,7 @@ $$('.tab').forEach(t=>t.onclick=()=>{
   $$('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');
   $$('.view').forEach(v=>v.classList.remove('active'));
   $('#view-'+t.dataset.view).classList.add('active');
-  if(t.dataset.view==='storico')renderHist();
+  if(t.dataset.view==='storico'){renderHist();renderBackupState();}
   window.scrollTo(0,0);
 });
 
@@ -383,7 +425,7 @@ function clienteRow(d={}){
     <div class="consent"><input type="checkbox" data-f="consenso" ${d.consenso?'checked':''}>
       <span>La cliente ha dato il <b>consenso</b> a essere ricontattata. Salvare solo con consenso.</span></div>
     <div class="grid">
-      <div class="field"><label>Data</label><input type="date" data-f="data" value="${d.data||new Date().toISOString().slice(0,10)}"></div>
+      <div class="field"><label>Data</label><input type="date" data-f="data" value="${d.data||oggiIT()}"></div>
       <div class="field"><label>Nome</label><input type="text" data-f="nome" value="${d.nome||''}"></div>
       <div class="field full"><label>Contatto (WhatsApp / e-mail / tel)</label><input type="text" data-f="contatto" value="${d.contatto||''}"></div>
       <div class="field"><label>Taglie (top/slip/intero)</label><input type="text" data-f="taglie" placeholder="es. 44 / 46 / 46" value="${d.taglie||''}"></div>
@@ -460,7 +502,7 @@ $('#meteo').addEventListener('change',saveDraft);
 function saveDraft(){recalc();localStorage.setItem(LS_DRAFT,JSON.stringify(getScheda()));}
 function loadDraft(){
   const d=JSON.parse(localStorage.getItem(LS_DRAFT)||'null');
-  $('#data').value=(d&&d.data)||new Date().toISOString().slice(0,10);
+  $('#data').value=(d&&d.data)||oggiIT();
   if(d){
     $('#orario').value=d.orario||'';$('#meteo').value=d.meteo||'';
     setChip($('[data-chip="affluenza"]'),d.affluenza);
@@ -498,7 +540,7 @@ $('#btn-nuova').onclick=()=>{
   $('#vendite').innerHTML='';$('#mancate').innerHTML='';
   ['orario','ingressi','acquirenti','c-richiesto','c-motivo','c-feedback','c-azione'].forEach(id=>$('#'+id).value='');
   $('#meteo').value='';setChip($('[data-chip="affluenza"]'),'');
-  $('#data').value=new Date().toISOString().slice(0,10);
+  $('#data').value=oggiIT();
   $('#vendite').appendChild(venditaRow());recalc();saveDraft();toast('Nuova scheda');
 };
 
@@ -556,8 +598,74 @@ function dl(text,name){
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();
 }
 
+/* ---------- Backup registro clienti ---------- */
+function csvClienti(){
+  const arr=JSON.parse(localStorage.getItem(LS_CLI)||'[]')
+    .filter(c=>(c.nome||'').trim()||(c.contatto||'').trim());
+  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+  const cols=[['data','Data'],['nome','Nome'],['contatto','Contatto'],['taglie','Taglie'],
+    ['stato','Stato'],['preferenze','Preferenze'],['bisogni','Bisogni'],['acquisti','Acquisti'],
+    ['provenienza','Provenienza'],['canale','Come ci ha conosciuto'],['followup','Follow-up'],
+    ['consenso','Consenso']];
+  let csv=cols.map(c=>c[1]).join(';')+'\n';
+  arr.forEach(c=>{csv+=cols.map(col=>q(col[0]==='consenso'?(c.consenso?'Sì':'No'):c[col[0]])).join(';')+'\n';});
+  return {csv,n:arr.length};
+}
+function markBackup(){localStorage.setItem(LS_BK,oggiIT());renderBackupState();$('#bk-nudge')&&$('#bk-nudge').remove();}
+
+$('#export-clienti').onclick=()=>{
+  const {csv,n}=csvClienti();
+  if(!n){toast('Nessuna cliente da salvare');return;}
+  dl(csv,'CRU_LE_clienti_'+oggiIT()+'.csv');
+  markBackup();toast(n+' clienti salvate ✓');
+};
+$('#export-tutto').onclick=()=>{
+  const days=JSON.parse(localStorage.getItem(LS_DAYS)||'[]');
+  $('#export-all').click();           // riusa l'export giornate esistente
+  const {csv,n}=csvClienti();
+  if(n)dl(csv,'CRU_LE_clienti_'+oggiIT()+'.csv');
+  markBackup();
+};
+
+/* Stato "ultimo backup" + promemoria dolce ogni 7 giorni */
+function giorniDa(iso){if(!iso)return null;const a=new Date(iso+'T12:00'),b=new Date(oggiIT()+'T12:00');return Math.round((b-a)/86400000);}
+function renderBackupState(){
+  const box=$('#backup-state');if(!box)return;
+  const {n}=csvClienti();const last=localStorage.getItem(LS_BK);const g=giorniDa(last);
+  const stale=g===null||g>=7;
+  box.innerHTML=`<div class="bk ${stale&&n?'warn':''}"><div class="dot"></div><div>
+    <div class="t">${n} client${n===1?'e':'i'} nel registro</div>
+    <div class="s">${last?('Ultimo backup: '+fmtDate(last)+(g?` · ${g} giorn${g===1?'o':'i'} fa`:' · oggi')):'Backup mai fatto'}</div>
+  </div></div>`;
+}
+function maybeNudge(){
+  const {n}=csvClienti();if(!n)return;
+  const g=giorniDa(localStorage.getItem(LS_BK));
+  if(g!==null&&g<7)return;
+  if(sessionStorage.getItem('bkNudgeChiuso'))return;
+  const host=$('#view-scheda');if(!host||$('#bk-nudge'))return;
+  const el=document.createElement('div');el.className='bk-nudge';el.id='bk-nudge';
+  el.innerHTML=`<span>💾</span><div><b>Fai una copia del registro clienti.</b>
+    <div class="s" style="color:var(--roccia);font-size:12px;margin-top:2px">
+    ${g===null?'Non hai mai scaricato il backup.':'Ultimo backup '+g+' giorni fa.'} Bastano 5 secondi.</div>
+    <button class="btn btn-primary" style="margin-top:10px;width:auto;padding:10px 16px" id="bk-nudge-go">Scarica ora</button></div>
+    <button class="x" id="bk-nudge-x" title="Più tardi">×</button>`;
+  host.insertBefore(el,host.firstChild);
+  $('#bk-nudge-go').onclick=()=>{$$('.tab').forEach(x=>x.classList.remove('active'));
+    $('.tab[data-view="storico"]').classList.add('active');
+    $$('.view').forEach(v=>v.classList.remove('active'));$('#view-storico').classList.add('active');
+    renderBackupState();$('#export-clienti').click();window.scrollTo(0,0);};
+  $('#bk-nudge-x').onclick=()=>{sessionStorage.setItem('bkNudgeChiuso','1');el.remove();};
+}
+
+/* ---------- Recensioni (QR) ---------- */
+const REVIEW_URL="https://www.google.com/search?q=CRU+LE+Recensioni&si=APenkKm7iecQ4G6P-TsbSMFKIQtv3EFIqRAFw-i8uEbk55Z-_-s-wrv0HnpbTKybSSSsE-6MjaYaZHe1K3t4TaDchpGKT25cxqo8NaQMr-lKHBw9hAwKFM9J-iKsdAyDZWB-X5XFUezf";
+const QR_DATAURI="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAfgAAAH4AQMAAACc5m08AAAABlBMVEVLPzT///+cfiXTAAADqUlEQVR42u1dy3LbMBDD9P//eTu1xQVA99LJoRMEysGWHF4I7hu7wnztQtd3fdd3fdd/2/V4X69bvO6uR/zH96/y8y987er6/7see4aekzDn4R+YR4/F7FNZ0f1PwP+F+4h0v+4I/PP40RVcUfzT8J9HISzWNBCrJIp/NP57CwH+qIM37MU/0f4TdXMERBHMh8fQ/Q/A//n2D3/1/4Pw31hQrfzQGXhU/pwgQK/uf4j9pyYYmL0HxnIB9qD4x+D/WHpL8syGfvy+OYHa/xT9z5TerIM/FvF7YCCZoe5/hPwr4Mz8SFzARBAsLuz+J8j/DLW/xfgQT2BrAasoin9K/HcS+0flby7gtvlH86P2P8n+W91vzcGY5cdm/nkuin+E/dckMAMBgX+2LCTeYvFP0f80+1bwYxpohX8YLzT+D7L/G9B/2IRzICRJNAwWuv8B9p+VvQ32Zn18rLyz8Lfuf/HP0P+U/3ELD+EA4ZMlVPyT/H9lAihFEJR+jQ2q/4PwZ9IPzPmS+Xfl/9H6f5b+V2V/7AH2LMAIwBoAdP8T4v+t749V/I4h0MCQPmDxR1L9Z2V8q0Dw0q87B6j+z8F/ozrmefm5np882mPS/Y/w/8gB3ChgtM9Hg/59Vv2fkv9ZP3CzvgK3+INiJWr/k/Anu8c/xCdk1CdlouKfJP8DifyF/8usgHqJxR9J/A9NBtEN4AnRrrDa/zT8x3N9rPYoN5gZ4l3b/U/AX5q/rvruXOHAWL6g+KfE/0brFpTJB7AyAdr/Eyj/VxpAbpYEIoXB6v+g/I8wvXTky6b+Ro5D+V9p+l89vyHB23tClv0JIYt0/yP8f2hjl3I+tuynREFpA+7+R8i/zf6AFvpZDPwLS7z4R/F/xK4PPC8EKQuMWIDuf0T8p2INmwd0jf1RZkDlP6v/F8IE9mbguTMB7f9K0v8j4/1GYn1mghn2a19Q8Q+Tfyd9QksBOgCg/f959n9gIz+xJh7kAkPCQzT+y4n/Rzl+I4M+vfN/3Ass/kn8b4jUWxP4pRxGxz8U/wj5h3QAQ6d+OiFIp8Z3/muQ/6/zf6wfSNw9NooAjf/z8De4heGnBUH1Civ/UfofTu9bzc+PexJg5R9p8781IwR7GQBsIlT5/2H+v73/4Z7zrRwQORvFPw7/8S5wwN71M8oEbP0/Ef+x8d9C/4Lyg5v/ibT//oon+Jt/7sHv5f/F+f/Ymc+i7sGGYFYK2Cja/c+J//v+zK7v+q7v+p+z/jc10zP5bCOVgwAAAABJRU5ErkJggg==";
+$('#qr-img').src=QR_DATAURI;
+$('#apri-recensione').href=REVIEW_URL;
+
 /* ---------- Init ---------- */
-loadDraft();loadClienti();
+loadDraft();loadClienti();renderBackupState();maybeNudge();
 
 /* ---------- Offline (service worker) ---------- */
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
