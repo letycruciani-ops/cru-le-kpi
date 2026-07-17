@@ -90,6 +90,18 @@
   select{appearance:none; background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8'><path d='M1 1l5 5 5-5' fill='none' stroke='%2373715C' stroke-width='1.6'/></svg>");
     background-repeat:no-repeat; background-position:right 14px center}
 
+  /* ---------- Contatore ingressi ---------- */
+  .counter{display:flex; align-items:center; justify-content:center; gap:18px; padding:8px 0 2px}
+  .cbtn{flex:0 0 auto; width:60px; height:60px; border-radius:50%; border:1px solid var(--linea);
+    background:#fff; color:var(--terracotta); font-size:26px; cursor:pointer; box-shadow:var(--ombra);
+    line-height:1; user-select:none; transition:transform .08s}
+  .cbtn:active{transform:scale(.92)}
+  .cbtn.plus{width:104px; height:104px; font-size:30px; letter-spacing:.02em;
+    background:var(--terracotta); color:#fff; border-color:var(--terracotta)}
+  .cval{text-align:center; min-width:96px}
+  .cval span{display:block; font-size:52px; color:var(--corteccia); line-height:1; font-family:'Cormorant Garamond',serif}
+  .cval small{font-size:11px; letter-spacing:.06em; color:var(--oliva); text-transform:uppercase}
+
   /* ---------- KPI live cards ---------- */
   .kpi-live{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:4px}
   .kpi-box{
@@ -246,8 +258,14 @@
     <!-- 1. Numeri del giorno -->
     <section class="card">
       <h2 class="sec-title"><span class="n">1</span> Numeri del giorno</h2>
-      <div class="grid-3">
-        <div class="field"><label>Ingressi</label><input type="number" inputmode="numeric" id="ingressi" min="0" placeholder="0"></div>
+      <p class="sub" style="margin-top:-4px">Tocca <b>＋1</b> ogni volta che entra una cliente.</p>
+      <div class="counter">
+        <button type="button" class="cbtn" id="ing-minus" aria-label="Togli un ingresso">−</button>
+        <div class="cval"><span id="ing-count">0</span><small>clienti entrati oggi</small></div>
+        <button type="button" class="cbtn plus" id="ing-plus" aria-label="Aggiungi un ingresso">＋1</button>
+      </div>
+      <input type="hidden" id="ingressi" value="">
+      <div class="grid" style="margin-top:16px">
         <div class="field"><label>Clienti acquirenti</label><input type="number" inputmode="numeric" id="acquirenti" min="0" placeholder="0"></div>
         <div class="field"><label>Pezzi venduti</label><input type="number" id="pezzi" readonly></div>
       </div>
@@ -496,6 +514,12 @@ function recalc(){
   $('#k-cont').textContent=cont;
   $('#k-mv').textContent=mv;
 }
+/* ---------- Contatore ingressi (+1 / -1) ---------- */
+function setIngressi(n){n=Math.max(0,n|0);$('#ingressi').value=n;$('#ing-count').textContent=n;recalc();saveDraft();}
+function syncCounter(){$('#ing-count').textContent=+$('#ingressi').value||0;}
+$('#ing-plus').onclick=()=>setIngressi((+$('#ingressi').value||0)+1);
+$('#ing-minus').onclick=()=>setIngressi((+$('#ingressi').value||0)-1);
+
 ['ingressi','acquirenti'].forEach(id=>$('#'+id).addEventListener('input',()=>{recalc();saveDraft();}));
 ['c-richiesto','c-motivo','c-feedback','c-azione','orario','data'].forEach(id=>$('#'+id).addEventListener('input',saveDraft));
 $('#meteo').addEventListener('change',saveDraft);
@@ -514,7 +538,7 @@ function loadDraft(){
     if(d.chiusura){$('#c-richiesto').value=d.chiusura.richiesto||'';$('#c-motivo').value=d.chiusura.motivo||'';$('#c-feedback').value=d.chiusura.feedback||'';$('#c-azione').value=d.chiusura.azione||'';}
   }
   if(!$$('#vendite .row-item').length)$('#vendite').appendChild(venditaRow());
-  recalc();
+  syncCounter();recalc();
 }
 
 /* ---------- Clienti persistence (permanent registry) ---------- */
@@ -543,6 +567,7 @@ $('#btn-nuova').onclick=()=>{
   ['orario','ingressi','acquirenti','c-richiesto','c-motivo','c-feedback','c-azione'].forEach(id=>$('#'+id).value='');
   $('#meteo').value='';setChip($('[data-chip="affluenza"]'),'');
   $('#data').value=oggiIT();
+  syncCounter();
   $('#vendite').appendChild(venditaRow());recalc();saveDraft();toast('Nuova scheda');
 };
 
