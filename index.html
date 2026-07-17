@@ -310,8 +310,10 @@
       <h2 class="sec-title"><span class="n">↓</span> Copia di sicurezza</h2>
       <p class="sub">I dati vivono solo su questo telefono. Scarica il backup ogni tanto e mettilo su Drive: se il telefono si perde, le clienti non si perdono.</p>
       <div id="backup-state"></div>
+      <button class="btn btn-primary" id="share-drive" style="margin-top:12px; display:none">☁︎ Salva su Drive (o dove vuoi)</button>
       <button class="btn btn-primary" id="export-clienti" style="margin-top:12px">⬇︎ Scarica registro clienti (CSV)</button>
       <button class="btn btn-ghost" id="export-tutto" style="margin-top:8px">⬇︎ Scarica tutto (giornate + clienti)</button>
+      <p class="hint" id="drive-hint" style="display:none">Si apre il menu Condividi del telefono → scegli <b>Drive</b>. Se il telefono è collegato al Google di Lety, il file va nel suo Drive.</p>
     </section>
   </div>
 
@@ -627,6 +629,24 @@ $('#export-tutto').onclick=()=>{
   markBackup();
 };
 
+/* Condividi -> Drive (menu di sistema del telefono). Appare solo se supportato. */
+(function(){
+  const btn=$('#share-drive');
+  const probe=new File(['x'],'x.csv',{type:'text/csv'});
+  if(navigator.canShare && navigator.canShare({files:[probe]})){
+    btn.style.display=''; $('#drive-hint').style.display='';
+    btn.onclick=async()=>{
+      const {csv,n}=csvClienti();
+      if(!n){toast('Nessuna cliente da salvare');return;}
+      const file=new File(['﻿'+csv],'CRU_LE_clienti_'+oggiIT()+'.csv',{type:'text/csv'});
+      try{
+        await navigator.share({files:[file],title:'Registro clienti CRU LE',text:'Backup registro clienti CRU LE'});
+        markBackup();toast('Condiviso ✓');
+      }catch(e){ /* utente ha annullato: nessun errore da mostrare */ }
+    };
+  }
+})();
+
 /* Stato "ultimo backup" + promemoria dolce ogni 7 giorni */
 function giorniDa(iso){if(!iso)return null;const a=new Date(iso+'T12:00'),b=new Date(oggiIT()+'T12:00');return Math.round((b-a)/86400000);}
 function renderBackupState(){
@@ -659,8 +679,8 @@ function maybeNudge(){
 }
 
 /* ---------- Recensioni (QR) ---------- */
-const REVIEW_URL="https://www.google.com/search?q=CRU+LE+Recensioni&si=APenkKm7iecQ4G6P-TsbSMFKIQtv3EFIqRAFw-i8uEbk55Z-_-s-wrv0HnpbTKybSSSsE-6MjaYaZHe1K3t4TaDchpGKT25cxqo8NaQMr-lKHBw9hAwKFM9J-iKsdAyDZWB-X5XFUezf";
-const QR_DATAURI="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAfgAAAH4AQMAAACc5m08AAAABlBMVEVLPzT///+cfiXTAAADqUlEQVR42u1dy3LbMBDD9P//eTu1xQVA99LJoRMEysGWHF4I7hu7wnztQtd3fdd3fdd/2/V4X69bvO6uR/zH96/y8y987er6/7see4aekzDn4R+YR4/F7FNZ0f1PwP+F+4h0v+4I/PP40RVcUfzT8J9HISzWNBCrJIp/NP57CwH+qIM37MU/0f4TdXMERBHMh8fQ/Q/A//n2D3/1/4Pw31hQrfzQGXhU/pwgQK/uf4j9pyYYmL0HxnIB9qD4x+D/WHpL8syGfvy+OYHa/xT9z5TerIM/FvF7YCCZoe5/hPwr4Mz8SFzARBAsLuz+J8j/DLW/xfgQT2BrAasoin9K/HcS+0flby7gtvlH86P2P8n+W91vzcGY5cdm/nkuin+E/dckMAMBgX+2LCTeYvFP0f80+1bwYxpohX8YLzT+D7L/G9B/2IRzICRJNAwWuv8B9p+VvQ32Zn18rLyz8Lfuf/HP0P+U/3ELD+EA4ZMlVPyT/H9lAihFEJR+jQ2q/4PwZ9IPzPmS+Xfl/9H6f5b+V2V/7AH2LMAIwBoAdP8T4v+t749V/I4h0MCQPmDxR1L9Z2V8q0Dw0q87B6j+z8F/ozrmefm5np882mPS/Y/w/8gB3ChgtM9Hg/59Vv2fkv9ZP3CzvgK3+INiJWr/k/Anu8c/xCdk1CdlouKfJP8DifyF/8usgHqJxR9J/A9NBtEN4AnRrrDa/zT8x3N9rPYoN5gZ4l3b/U/AX5q/rvruXOHAWL6g+KfE/0brFpTJB7AyAdr/Eyj/VxpAbpYEIoXB6v+g/I8wvXTky6b+Ro5D+V9p+l89vyHB23tClv0JIYt0/yP8f2hjl3I+tuynREFpA+7+R8i/zf6AFvpZDPwLS7z4R/F/xK4PPC8EKQuMWIDuf0T8p2INmwd0jf1RZkDlP6v/F8IE9mbguTMB7f9K0v8j4/1GYn1mghn2a19Q8Q+Tfyd9QksBOgCg/f959n9gIz+xJh7kAkPCQzT+y4n/Rzl+I4M+vfN/3Ass/kn8b4jUWxP4pRxGxz8U/wj5h3QAQ6d+OiFIp8Z3/muQ/6/zf6wfSNw9NooAjf/z8De4heGnBUH1Civ/UfofTu9bzc+PexJg5R9p8781IwR7GQBsIlT5/2H+v73/4Z7zrRwQORvFPw7/8S5wwN71M8oEbP0/Ef+x8d9C/4Lyg5v/ibT//oon+Jt/7sHv5f/F+f/Ymc+i7sGGYFYK2Cja/c+J//v+zK7v+q7v+p+z/jc10zP5bCOVgwAAAABJRU5ErkJggg==";
+const REVIEW_URL="https://search.google.com/local/writereview?placeid=ChIJ477KEpbPKRMRHXeifENzUOk";
+const QR_DATAURI="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAYMAAAGDAQMAAADzqu5RAAAABlBMVEVLPzT///+cfiXTAAACl0lEQVR42u2cu43DMAyG6XPhMiNkFI+WjOZRMoJKF0YU8Sk5XYoDaOBXcRAMs8kHPn6SPqo/nhfBAhawgAUsThYv0rPWshxyu7enb6rPtdZ9bvenvcEv/9GvBxb/aSFQbkKz8SqBkho4vfA7jFKYgmBSgrti4ssk4Gq/zOKMzU9nEMxPkMT1Hi2ucjitdeM3pgqCFyLIvPjwE3pskRBB8BJ5UAn2SqadYj6IPJiaoNeizRkt631fUIumJjhoi64mDouiuwbP/g5+3ax5UPWgUNroxjGTz+CDMwjmjaKL+ZehpHtx9xSmrTplsT+BYOI8yOWKFTAteLLrDbWNiH3VFyCYNw8yOFMTm+VBiaInWQGCOQkWExHmeo2getygL1CLZvdBDp7fRami1NqGvRJ5ML8PEpcrEk4XY1r6E+TBxD64z+F6Yx6UksYDLHwwtZo4bIS0h4g4htmEtmsIBDMTFNfrUdS7aqbxWWiAYO6ezFRjsNtrG53waq8bejB3LWpZz8OpNrRD2ksUhR5M3ZOxDszNsl4ETyJbt3ihL5p/wiuXUzOtbsOgEH3R7HlQPM71e/F1CxvfkypEEMysB6MnE1nP5oPaMoUezO2Dkux6X5S6V2otuvZIi183J0Hfipld/floXsFFgxQEcxKsx2nBSWb0UdJIHtQ+Gwjm98EY9cp8MHaACbOJ7D5o08BY9F3CB+e3vwqCiXsyPhbUsypTK0FPvVMQTNqTUXC150FvzsTONmrRS+xs+65atEP7qjYmvNf4dimKUmuv+fdotvIEgtkJUl954r+6ZaGZEV21qxDUhFj8SyVVE4+Q9iCYOg/WqlF0HfpsLgMxH7zKt0v28bVoB/8mtDdnQDC3HsR/jYAFLGABix8tPhmSPdpDUTZ1AAAAAElFTkSuQmCC";
 $('#qr-img').src=QR_DATAURI;
 $('#apri-recensione').href=REVIEW_URL;
 
