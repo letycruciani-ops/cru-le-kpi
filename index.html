@@ -179,6 +179,19 @@
   .empty{text-align:center; color:var(--roccia); font-family:'Cormorant Garamond',serif;
     font-style:italic; font-size:18px; padding:40px 10px}
 
+  /* ---------- Backup ---------- */
+  .bk{display:flex; align-items:center; gap:12px; border:1px solid var(--linea);
+    border-radius:12px; padding:14px; background:var(--calce)}
+  .bk .dot{width:10px; height:10px; flex:0 0 10px; border-radius:50%; background:var(--acqua)}
+  .bk.warn{background:#FBF1EA; border-color:var(--argilla)}
+  .bk.warn .dot{background:var(--terracotta)}
+  .bk .t{font-size:14px; color:var(--corteccia)}
+  .bk .s{font-size:12px; color:var(--roccia); margin-top:2px}
+  .bk-nudge{display:flex; gap:10px; align-items:flex-start; background:#FBF1EA;
+    border:1px solid var(--argilla); border-radius:12px; padding:14px; margin-bottom:16px}
+  .bk-nudge .x{margin-left:auto; background:none; border:none; color:var(--roccia);
+    font-size:18px; cursor:pointer; line-height:1; padding:0 2px}
+
   /* consent */
   .consent{display:flex; gap:10px; align-items:flex-start; background:#F3EEE1;
     border-radius:10px; padding:12px; font-size:13px; color:var(--oliva); margin-bottom:6px}
@@ -352,6 +365,16 @@
       <div id="hist-list"></div>
       <button class="btn btn-ghost" id="export-all" style="margin-top:8px">⬇︎ Riepilogo giornate (Excel)</button>
     </section>
+
+    <section class="card">
+      <h2 class="sec-title"><span class="n">↓</span> Copia di sicurezza</h2>
+      <p class="sub">I dati vivono solo su questo telefono. Scarica il backup ogni tanto e mettilo su Drive: se il telefono si perde, le clienti non si perdono.</p>
+      <div id="backup-state"></div>
+      <button class="btn btn-primary" id="share-drive" style="margin-top:12px; display:none">☁︎ Salva su Drive (o dove vuoi)</button>
+      <button class="btn btn-primary" id="bk-clienti" style="margin-top:12px">⬇︎ Scarica registro clienti (CSV)</button>
+      <button class="btn btn-ghost" id="export-tutto" style="margin-top:8px">⬇︎ Scarica tutto (giornate + clienti)</button>
+      <p class="hint" id="drive-hint" style="display:none">Si apre il menu Condividi del telefono → scegli <b>Drive</b>. Se il telefono è collegato al Google di Lety, il file va nel suo Drive.</p>
+    </section>
   </div>
 
   <!-- ============ VIEW: RECENSIONI ============ -->
@@ -377,9 +400,10 @@
 
 <script>
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-const LS_DAYS='cruleKpiDays', LS_DRAFT='cruleKpiDraft', LS_CLI='cruleClienti';
+const LS_DAYS='cruleKpiDays', LS_DRAFT='cruleKpiDraft', LS_CLI='cruleClienti', LS_BK='cruleLastBackup';
 const eur=n=>'€'+(Math.round(n*100)/100).toLocaleString('it-IT',{minimumFractionDigits:0,maximumFractionDigits:2});
 const esc=s=>String(s==null?'':s).replace(/"/g,'&quot;');
+const oggiIT=()=>{const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1900);}
 
 /* ================= CATALOGO PRODOTTI (assortimento ufficiale SS26 · 13 modelli) =================
@@ -901,16 +925,81 @@ $('#export-fattura').onclick=()=>{
   dl(csv,'CRU_LE_Venduto_'+new Date().toISOString().slice(0,10)+'.csv');
   toast('Elenco venduto esportato ✓');
 };
-/* registro clienti */
-$('#export-clienti').onclick=()=>{
+/* registro clienti — CSV riusabile */
+function csvClienti(){
   const clienti=JSON.parse(localStorage.getItem(LS_CLI)||'[]').filter(c=>(c.nome&&c.nome.trim())||c.whatsapp||c.email||c.instagram);
-  if(!clienti.length){toast('Registro vuoto');return;}
   let csv='Data;Nome;Consenso;WhatsApp;Email;Instagram;Stato;Fascia eta;Taglia intero;Taglia top;Taglia slip;Preferenze;Bisogni;Acquisti;Provenienza;Canale;Follow-up\n';
   clienti.forEach(c=>{csv+=[c.data,c.nome,c.consenso?'Sì':'No',c.whatsapp,c.email,c.instagram,c.stato,c.eta,
     c.tagliaIntero,c.tagliaTop,c.tagliaSlip,c.preferenze,c.bisogni,c.acquisti,c.provenienza,c.canale,c.followup].map(q).join(';')+'\n';});
-  dl(csv,'CRU_LE_Clienti_'+new Date().toISOString().slice(0,10)+'.csv');
-  toast('Registro clienti esportato ✓');
+  return {csv, n:clienti.length};
+}
+function scaricaClienti(){
+  const {csv,n}=csvClienti();
+  if(!n){toast('Registro vuoto');return false;}
+  dl(csv,'CRU_LE_Clienti_'+oggiIT()+'.csv');
+  markBackup();toast(n+' client'+(n===1?'e':'i')+' salvate ✓');
+  return true;
+}
+$('#export-clienti').onclick=scaricaClienti;
+$('#bk-clienti').onclick=scaricaClienti;
+$('#export-tutto').onclick=()=>{
+  $('#export-all').click();            // riusa l'export riepilogo giornate
+  const {csv,n}=csvClienti();
+  if(n)dl(csv,'CRU_LE_Clienti_'+oggiIT()+'.csv');
+  markBackup();
 };
+
+/* ---------- Copia di sicurezza: stato + Drive + promemoria 7gg ---------- */
+function markBackup(){localStorage.setItem(LS_BK,oggiIT());renderBackupState();const nz=$('#bk-nudge');if(nz)nz.remove();}
+function giorniDa(iso){if(!iso)return null;const a=new Date(iso+'T12:00'),b=new Date(oggiIT()+'T12:00');return Math.round((b-a)/86400000);}
+function renderBackupState(){
+  const box=$('#backup-state');if(!box)return;
+  const {n}=csvClienti();const last=localStorage.getItem(LS_BK);const g=giorniDa(last);
+  const stale=g===null||g>=7;
+  box.innerHTML=`<div class="bk ${stale&&n?'warn':''}"><div class="dot"></div><div>
+    <div class="t">${n} client${n===1?'e':'i'} nel registro</div>
+    <div class="s">${last?('Ultimo backup: '+fmtDate(last)+(g?` · ${g} giorn${g===1?'o':'i'} fa`:' · oggi')):'Backup mai fatto'}</div>
+  </div></div>`;
+}
+/* Condividi -> Drive (menu di sistema del telefono). Appare solo se supportato. */
+(function(){
+  const btn=$('#share-drive');if(!btn)return;
+  const probe=new File(['x'],'x.csv',{type:'text/csv'});
+  if(navigator.canShare && navigator.canShare({files:[probe]})){
+    btn.style.display=''; $('#drive-hint').style.display='';
+    btn.onclick=async()=>{
+      const {csv,n}=csvClienti();
+      if(!n){toast('Nessuna cliente da salvare');return;}
+      const file=new File(['﻿'+csv],'CRU_LE_Clienti_'+oggiIT()+'.csv',{type:'text/csv'});
+      try{
+        await navigator.share({files:[file],title:'Registro clienti CRU LE',text:'Backup registro clienti CRU LE'});
+        markBackup();toast('Condiviso ✓');
+      }catch(e){ /* utente ha annullato: nessun errore da mostrare */ }
+    };
+  }
+})();
+/* Promemoria dolce ogni 7 giorni (banner in cima alla Scheda) */
+function maybeNudge(){
+  const {n}=csvClienti();if(!n)return;
+  const g=giorniDa(localStorage.getItem(LS_BK));
+  if(g!==null&&g<7)return;
+  if(sessionStorage.getItem('bkNudgeChiuso'))return;
+  const host=$('#view-scheda');if(!host||$('#bk-nudge'))return;
+  const el=document.createElement('div');el.className='bk-nudge';el.id='bk-nudge';
+  el.innerHTML=`<span>💾</span><div><b>Fai una copia del registro clienti.</b>
+    <div class="s" style="color:var(--roccia);font-size:12px;margin-top:2px">
+    ${g===null?'Non hai mai scaricato il backup.':'Ultimo backup '+g+' giorni fa.'} Bastano 5 secondi.</div>
+    <button class="btn btn-primary" style="margin-top:10px;width:auto;padding:10px 16px" id="bk-nudge-go">Scarica ora</button></div>
+    <button class="x" id="bk-nudge-x" title="Più tardi">×</button>`;
+  host.insertBefore(el,host.firstChild);
+  $('#bk-nudge-go').onclick=()=>{
+    $$('.tab').forEach(x=>x.classList.remove('active'));
+    $('.tab[data-view="storico"]').classList.add('active');
+    $$('.view').forEach(v=>v.classList.remove('active'));$('#view-storico').classList.add('active');
+    scaricaClienti();window.scrollTo(0,0);
+  };
+  $('#bk-nudge-x').onclick=()=>{sessionStorage.setItem('bkNudgeChiuso','1');el.remove();};
+}
 
 /* ---------- Recensioni (QR Google) ---------- */
 const REVIEW_URL="https://search.google.com/local/writereview?placeid=ChIJ477KEpbPKRMRHXeifENzUOk";
@@ -919,7 +1008,7 @@ if($('#qr-img'))$('#qr-img').src=QR_DATAURI;
 if($('#apri-recensione'))$('#apri-recensione').href=REVIEW_URL;
 
 /* ---------- Init ---------- */
-loadDraft();loadClienti();
+loadDraft();loadClienti();renderBackupState();maybeNudge();
 
 /* ---------- Offline (service worker) ---------- */
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
