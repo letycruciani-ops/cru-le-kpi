@@ -44,11 +44,11 @@
   .brand{font-size:22px; letter-spacing:.34em; text-align:center; color:var(--corteccia)}
   .brand small{display:block; font-family:'Cormorant Garamond',serif; letter-spacing:.18em;
     font-size:13px; color:var(--roccia); text-transform:uppercase; margin-top:3px}
-  .tabs{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px}
+  .tabs{display:flex; gap:6px; margin-top:14px}
   .tab{
-    flex:1 1 40%; text-align:center; padding:11px 6px; border-radius:10px;
+    flex:1; text-align:center; padding:11px 4px; border-radius:10px;
     background:transparent; border:1px solid var(--linea); color:var(--oliva);
-    font-size:13.5px; letter-spacing:.04em; cursor:pointer; transition:.15s;
+    font-size:12.5px; letter-spacing:.02em; cursor:pointer; transition:.15s;
   }
   .tab.active{background:var(--terracotta); color:#fff; border-color:var(--terracotta)}
 
@@ -74,7 +74,7 @@
   /* ---------- Fields ---------- */
   .grid{display:grid; grid-template-columns:1fr 1fr; gap:12px}
   .grid-3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px}
-  .grid>*,.grid-3>*{min-width:0}            /* evita che i campi larghi (data/ora) sfondino la colonna */
+  .grid>*,.grid-3>*{min-width:0}
   .field{display:flex; flex-direction:column; gap:5px; min-width:0}
   .field.full{grid-column:1/-1}
   label{font-size:12px; letter-spacing:.05em; color:var(--oliva); text-transform:uppercase}
@@ -86,21 +86,11 @@
   input[type=date],input[type=time]{-webkit-appearance:none; appearance:none}
   input:focus,select:focus,textarea:focus{border-color:var(--argilla); background:#fff}
   textarea{resize:vertical; min-height:56px}
+  textarea.big{min-height:92px}
   input[readonly]{background:#F3EEE1; color:var(--oliva); font-weight:600}
   select{appearance:none; background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8'><path d='M1 1l5 5 5-5' fill='none' stroke='%2373715C' stroke-width='1.6'/></svg>");
-    background-repeat:no-repeat; background-position:right 14px center}
-
-  /* ---------- Contatore ingressi ---------- */
-  .counter{display:flex; align-items:center; justify-content:center; gap:18px; padding:8px 0 2px}
-  .cbtn{flex:0 0 auto; width:60px; height:60px; border-radius:50%; border:1px solid var(--linea);
-    background:#fff; color:var(--terracotta); font-size:26px; cursor:pointer; box-shadow:var(--ombra);
-    line-height:1; user-select:none; transition:transform .08s}
-  .cbtn:active{transform:scale(.92)}
-  .cbtn.plus{width:104px; height:104px; font-size:30px; letter-spacing:.02em;
-    background:var(--terracotta); color:#fff; border-color:var(--terracotta)}
-  .cval{text-align:center; min-width:96px}
-  .cval span{display:block; font-size:52px; color:var(--corteccia); line-height:1; font-family:'Cormorant Garamond',serif}
-  .cval small{font-size:11px; letter-spacing:.06em; color:var(--oliva); text-transform:uppercase}
+    background-repeat:no-repeat; background-position:right 14px center; padding-right:34px}
+  .autofill{background:#F6F1E6; border-style:dashed}
 
   /* ---------- KPI live cards ---------- */
   .kpi-live{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:4px}
@@ -122,7 +112,6 @@
     border:none; background:#fff; color:var(--terracotta); font-size:18px; cursor:pointer;
     box-shadow:var(--ombra); line-height:1; z-index:2;
   }
-  .row-head{font-size:12px; color:var(--roccia); letter-spacing:.05em; margin-bottom:8px}
 
   /* ---------- Chips ---------- */
   .chips{display:flex; gap:6px; flex-wrap:wrap}
@@ -144,6 +133,7 @@
   .btn-add:hover{background:#cdb994}
   .btn-primary{background:var(--terracotta); color:#fff}
   .btn-ghost{background:transparent; border:1px solid var(--linea); color:var(--oliva)}
+  .btn+.btn{margin-top:10px}
 
   /* ---------- Sticky action bar ---------- */
   .actionbar{
@@ -152,7 +142,7 @@
     border-top:1px solid var(--linea); padding:12px 16px calc(12px + env(safe-area-inset-bottom));
     display:flex; gap:10px; max-width:760px; margin:0 auto;
   }
-  .actionbar .btn{width:auto; flex:1}
+  .actionbar .btn{width:auto; flex:1; margin-top:0}
 
   /* ---------- History ---------- */
   .hist-item{
@@ -173,27 +163,26 @@
 
   /* consent */
   .consent{display:flex; gap:10px; align-items:flex-start; background:#F3EEE1;
-    border-radius:10px; padding:12px; font-size:13px; color:var(--oliva); margin-bottom:12px}
-  .consent input{width:20px; height:20px; flex:0 0 20px; margin-top:2px}
+    border-radius:10px; padding:12px; font-size:13px; color:var(--oliva); margin-bottom:6px}
+  .consent input{width:22px; height:22px; flex:0 0 22px; margin-top:1px}
+  .consent b{color:var(--corteccia)}
+  .privacy-note{font-size:11.5px; color:var(--roccia); line-height:1.45; margin:0 2px 12px;
+    font-family:'Cormorant Garamond',serif; font-style:italic}
+  .warn{color:var(--terracotta); font-weight:600; font-style:normal; font-family:inherit}
 
-  /* ---------- QR recensioni ---------- */
-  .qr-wrap{display:inline-block; padding:16px; background:#fff; border:1px solid var(--linea);
-    border-radius:16px; box-shadow:var(--ombra); margin:6px auto 4px}
-  #qr-img{display:block; width:240px; height:240px; image-rendering:pixelated}
-  .qr-cta{font-size:18px; color:var(--corteccia); line-height:1.5; margin:14px 0 16px}
-
-  /* ---------- Backup ---------- */
-  .bk{display:flex; align-items:center; gap:12px; border:1px solid var(--linea);
-    border-radius:12px; padding:14px; background:var(--calce)}
-  .bk .dot{width:10px; height:10px; flex:0 0 10px; border-radius:50%; background:var(--acqua)}
-  .bk.warn{background:#FBF1EA; border-color:var(--argilla)}
-  .bk.warn .dot{background:var(--terracotta)}
-  .bk .t{font-size:14px; color:var(--corteccia)}
-  .bk .s{font-size:12px; color:var(--roccia); margin-top:2px}
-  .bk-nudge{display:flex; gap:10px; align-items:flex-start; background:#FBF1EA;
-    border:1px solid var(--argilla); border-radius:12px; padding:14px; margin-bottom:16px}
-  .bk-nudge .x{margin-left:auto; background:none; border:none; color:var(--roccia);
-    font-size:18px; cursor:pointer; line-height:1; padding:0 2px}
+  /* stats */
+  .stat-group{margin-bottom:24px}
+  .stat-group h3{font-size:13px; letter-spacing:.06em; color:var(--terracotta);
+    text-transform:uppercase; margin:0 0 12px; display:flex; align-items:center; gap:8px}
+  .bar-row{margin-bottom:10px}
+  .bar-top{display:flex; justify-content:space-between; gap:8px; font-size:13.5px; margin-bottom:4px}
+  .bar-top .lab{color:var(--corteccia); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .bar-top .pct{color:var(--oliva); flex:0 0 auto}
+  .bar-track{height:9px; background:#EEE7D7; border-radius:6px; overflow:hidden}
+  .bar-fill{height:100%; border-radius:6px; background:var(--terracotta)}
+  .bar-fill.aq{background:var(--acqua)} .bar-fill.ar{background:var(--argilla)} .bar-fill.ol{background:var(--oliva)}
+  .stat-hi{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:18px}
+  .stat-hi .kpi-box .v{font-size:18px} .stat-hi .kpi-box .l{margin-top:5px}
 
   .toast{
     position:fixed; bottom:96px; left:50%; transform:translateX(-50%) translateY(20px);
@@ -204,9 +193,11 @@
   .hint{font-size:12px; color:var(--roccia); font-family:'Cormorant Garamond',serif; font-style:italic; margin-top:6px}
   @media(max-width:520px){
     .grid-3{grid-template-columns:1fr 1fr}
-    .brand{font-size:19px; letter-spacing:.28em}
+    .brand{font-size:19px; letter-spacing:.24em}
     .kpi-live{grid-template-columns:1fr 1fr}
-    .actionbar .btn{padding:14px 8px; font-size:14px}
+    .stat-hi{grid-template-columns:1fr}
+    .actionbar .btn{padding:14px 6px; font-size:13.5px}
+    .tab{font-size:11.5px; letter-spacing:0}
   }
   @media(max-width:360px){
     .grid,.grid-3{grid-template-columns:1fr}
@@ -223,10 +214,10 @@
 <header>
   <div class="brand">CRU LE<small>Scheda giornaliera KPI · Negozio</small></div>
   <div class="tabs">
-    <button class="tab active" data-view="scheda">Scheda del giorno</button>
-    <button class="tab" data-view="clienti">Registro clienti</button>
+    <button class="tab active" data-view="scheda">Scheda</button>
+    <button class="tab" data-view="clienti">Clienti</button>
+    <button class="tab" data-view="stats">Statistiche</button>
     <button class="tab" data-view="storico">Storico</button>
-    <button class="tab" data-view="recensioni">⭐ Recensioni</button>
   </div>
 </header>
 
@@ -258,14 +249,8 @@
     <!-- 1. Numeri del giorno -->
     <section class="card">
       <h2 class="sec-title"><span class="n">1</span> Numeri del giorno</h2>
-      <p class="sub" style="margin-top:-4px">Tocca <b>＋1</b> ogni volta che entra una cliente.</p>
-      <div class="counter">
-        <button type="button" class="cbtn" id="ing-minus" aria-label="Togli un ingresso">−</button>
-        <div class="cval"><span id="ing-count">0</span><small>clienti entrati oggi</small></div>
-        <button type="button" class="cbtn plus" id="ing-plus" aria-label="Aggiungi un ingresso">＋1</button>
-      </div>
-      <input type="hidden" id="ingressi" value="">
-      <div class="grid" style="margin-top:16px">
+      <div class="grid-3">
+        <div class="field"><label>Ingressi</label><input type="number" inputmode="numeric" id="ingressi" min="0" placeholder="0"></div>
         <div class="field"><label>Clienti acquirenti</label><input type="number" inputmode="numeric" id="acquirenti" min="0" placeholder="0"></div>
         <div class="field"><label>Pezzi venduti</label><input type="number" id="pezzi" readonly></div>
       </div>
@@ -287,21 +272,29 @@
       <button class="btn btn-add" id="add-vendita" style="margin-top:12px">＋ Aggiungi vendita</button>
     </section>
 
-    <!-- 4. Mancate vendite -->
+    <!-- 3. Mancate vendite -->
     <section class="card">
       <h2 class="sec-title"><span class="n">3</span> Mancate vendite / richieste non soddisfatte</h2>
       <div class="rows" id="mancate"></div>
       <button class="btn btn-add" id="add-mancata" style="margin-top:12px">＋ Aggiungi mancata vendita</button>
     </section>
 
-    <!-- 5. Chiusura -->
+    <!-- 4. Chiusura -->
     <section class="card">
       <h2 class="sec-title"><span class="n">4</span> Chiusura della giornata</h2>
       <div class="grid">
-        <div class="field full"><label>Prodotto / taglia più richiesta</label><input type="text" id="c-richiesto" placeholder="es. Intero nero 46"></div>
-        <div class="field full"><label>Motivo n.1 di mancata vendita</label><input type="text" id="c-motivo" placeholder="es. taglia esaurita"></div>
-        <div class="field full"><label>Feedback utile da ricordare</label><textarea id="c-feedback" placeholder="Cosa hanno detto le clienti…"></textarea></div>
-        <div class="field full"><label>Azione per domani</label><textarea id="c-azione" placeholder="Una cosa concreta da fare domani…"></textarea></div>
+        <div class="field full"><label>Prodotto / taglia più richiesta <span style="text-transform:none;color:var(--roccia)">· auto</span></label>
+          <input type="text" id="c-richiesto" class="autofill" placeholder="si compila da solo — modificabile"></div>
+        <div class="field full"><label>Motivo n.1 di mancata vendita <span style="text-transform:none;color:var(--roccia)">· auto</span></label>
+          <input type="text" id="c-motivo" class="autofill" placeholder="si compila da solo — modificabile"></div>
+        <div class="field full"><label>Feedback delle clienti</label>
+          <textarea id="c-feedback" class="big" placeholder="Cosa hanno detto, chiesto, apprezzato o criticato…"></textarea></div>
+        <div class="field full"><label>Idee strategiche / cosa spingere</label>
+          <textarea id="c-strategia" placeholder="Cosa proporre di più, abbinamenti, occasioni, spunti di vendita…"></textarea></div>
+        <div class="field full"><label>Note prodotto / design</label>
+          <textarea id="c-design" placeholder="Vestibilità, taglie, colori, materiali: cosa migliorare o creare…"></textarea></div>
+        <div class="field full"><label>Azione per domani</label>
+          <textarea id="c-azione" placeholder="Una cosa concreta da fare domani…"></textarea></div>
       </div>
     </section>
   </div>
@@ -316,41 +309,30 @@
     </section>
   </div>
 
+  <!-- ============ VIEW: STATISTICHE ============ -->
+  <div class="view" id="view-stats">
+    <section class="card">
+      <h2 class="sec-title"><span class="n">▤</span> Statistiche</h2>
+      <p class="sub">Riepilogo su tutte le giornate salvate e sul registro clienti.</p>
+      <div id="stats-content"></div>
+      <button class="btn btn-ghost" id="export-fattura" style="margin-top:8px">⬇︎ Elenco venduto (Excel)</button>
+      <button class="btn btn-ghost" id="export-clienti">⬇︎ Registro clienti (Excel)</button>
+    </section>
+  </div>
+
   <!-- ============ VIEW: STORICO ============ -->
   <div class="view" id="view-storico">
     <section class="card">
       <h2 class="sec-title"><span class="n">≡</span> Giornate salvate</h2>
       <div id="hist-list"></div>
-      <button class="btn btn-ghost" id="export-all" style="margin-top:8px">⬇︎ Esporta giornate (CSV)</button>
-    </section>
-
-    <section class="card">
-      <h2 class="sec-title"><span class="n">↓</span> Copia di sicurezza</h2>
-      <p class="sub">I dati vivono solo su questo telefono. Scarica il backup ogni tanto e mettilo su Drive: se il telefono si perde, le clienti non si perdono.</p>
-      <div id="backup-state"></div>
-      <button class="btn btn-primary" id="share-drive" style="margin-top:12px; display:none">☁︎ Salva su Drive (o dove vuoi)</button>
-      <button class="btn btn-primary" id="export-clienti" style="margin-top:12px">⬇︎ Scarica registro clienti (CSV)</button>
-      <button class="btn btn-ghost" id="export-tutto" style="margin-top:8px">⬇︎ Scarica tutto (giornate + clienti)</button>
-      <p class="hint" id="drive-hint" style="display:none">Si apre il menu Condividi del telefono → scegli <b>Drive</b>. Se il telefono è collegato al Google di Lety, il file va nel suo Drive.</p>
-    </section>
-  </div>
-
-  <!-- ============ VIEW: RECENSIONI ============ -->
-  <div class="view" id="view-recensioni">
-    <section class="card" style="text-align:center">
-      <h2 class="sec-title" style="justify-content:center"><span class="n">⭐</span> Lascia una recensione</h2>
-      <p class="sub" style="text-align:center">Gira lo schermo verso la cliente.<br>Inquadra il codice con la fotocamera del telefono.</p>
-      <div class="qr-wrap"><img id="qr-img" alt="QR recensioni CRU LE su Google" width="240" height="240"></div>
-      <p class="qr-cta serif">Grazie per aver scelto <b>CRU&nbsp;LE</b> ♥<br>Il tuo racconto aiuta chi cerca autenticità.</p>
-      <a class="btn btn-primary" id="apri-recensione" href="#" target="_blank" rel="noopener" style="margin-top:6px">Apri direttamente su questo telefono</a>
-      <p class="hint">Il codice porta alla pagina Google di CRU LE. Poi basta toccare le stelline.</p>
+      <button class="btn btn-ghost" id="export-all" style="margin-top:8px">⬇︎ Riepilogo giornate (Excel)</button>
     </section>
   </div>
 </main>
 
 <div class="actionbar">
   <button class="btn btn-ghost" id="btn-nuova">Nuova</button>
-  <button class="btn btn-ghost" id="btn-stampa">Stampa / PDF</button>
+  <button class="btn btn-ghost" id="btn-stampa">Stampa</button>
   <button class="btn btn-primary" id="btn-salva">Salva giornata</button>
 </div>
 
@@ -358,22 +340,49 @@
 
 <script>
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-const LS_DAYS='cruleKpiDays', LS_DRAFT='cruleKpiDraft', LS_CLI='cruleClienti', LS_BK='cruleLastBackup';
-// data di oggi in orario italiano (evita il salto a "ieri" dopo mezzanotte con toISOString/UTC)
-const oggiIT=()=>{const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
+const LS_DAYS='cruleKpiDays', LS_DRAFT='cruleKpiDraft', LS_CLI='cruleClienti';
 const eur=n=>'€'+(Math.round(n*100)/100).toLocaleString('it-IT',{minimumFractionDigits:0,maximumFractionDigits:2});
+const esc=s=>String(s==null?'':s).replace(/"/g,'&quot;');
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1900);}
+
+/* ================= CATALOGO PRODOTTI (da Shopify SS26 · Maestrale) ================= */
+const CATALOG=[
+  {m:'Paglia',   tipo:'Costume intero', cat:'intero', prezzo:130, colori:{'Nero':[42,44,46,48],'Terra':[42,44,46,48],'Sabbia':[42,44,46,48]}},
+  {m:'Crine',    tipo:'Top bikini',     cat:'top',    prezzo:65,  colori:{'Nero':[44,46,48,50],'Terra/giallo':[44,46,48,50],'Menta/arancio':[44,46,48,50],'Sabbia/blu':[44,46,48,50]}},
+  {m:'Goccia',   tipo:'Top bikini',     cat:'top',    prezzo:65,  colori:{'Nero':[42,44,46,48],'Giallo':[42,44,46,48],'Terra':[42,44,46,48],'Menta':[42,44,46,48]}},
+  {m:'Velo',     tipo:'Slip bikini',    cat:'slip',   prezzo:65,  colori:{'Nero':[44,46,48,50],'Terra/giallo':[44,46,48,50],'Menta/arancio':[44,46,48,50],'Sabbia/blu':[44,46,48,50]}},
+  {m:'Maestrale',tipo:'Slip bikini',    cat:'slip',   prezzo:65,  colori:{'Nero':[42,44,46,48,50],'Terra/giallo':[42,44,46,48,50],'Menta/arancio':[42,44,46,48,50],'Sabbia/blu':[42,44,46,48,50]}},
+  {m:'Cenere',   tipo:'Slip bikini',    cat:'slip',   prezzo:65,  colori:{'Nero':[42,44,46,48,50],'Giallo':[42,44,46,48,50],'Terra':[42,44,46,48,50],'Arancio':[42,44,46,48,50]}},
+];
+const modelByName=n=>CATALOG.find(p=>p.m===n);
+function modelloOptions(sel){
+  return '<option value="">— scegli —</option>'+
+    CATALOG.map(p=>`<option ${p.m===sel?'selected':''}>${p.m}</option>`).join('')+
+    `<option ${sel==='Altro'?'selected':''}>Altro / accessorio</option>`;
+}
+const MOTIVI=['Taglia esaurita','Colore non disponibile','Modello non disponibile','Prezzo troppo alto',
+  'Cliente indecisa','Solo sguardo / curiosità','Voleva pensarci','Tornerà','Comprata altrove',
+  'Vestibilità non adatta','Non il modello giusto','Altro'];
+function motivoOptions(sel){return '<option value="">—</option>'+MOTIVI.map(m=>`<option ${m===sel?'selected':''}>${m}</option>`).join('');}
+const SIZE_OPTS=sel=>'<option value="">—</option>'+[42,44,46,48,50].map(t=>`<option ${(''+t)===(''+(sel||''))?'selected':''}>${t}</option>`).join('');
+
+/* label di una vendita/mancata a partire dai dati */
+function prodLabel(v){
+  if(v.modello && v.modello!=='Altro' && v.modello!=='') return [v.modello,v.colore,v.taglia].filter(Boolean).join(' · ');
+  return v.articolo||'';
+}
 
 /* ---------- Tabs ---------- */
 $$('.tab').forEach(t=>t.onclick=()=>{
   $$('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');
   $$('.view').forEach(v=>v.classList.remove('active'));
   $('#view-'+t.dataset.view).classList.add('active');
-  if(t.dataset.view==='storico'){renderHist();renderBackupState();}
+  if(t.dataset.view==='storico')renderHist();
+  if(t.dataset.view==='stats')renderStats();
   window.scrollTo(0,0);
 });
 
-/* ---------- Chips (single select) ---------- */
+/* ---------- Chips (single select, intestazione) ---------- */
 function initChips(root){
   root.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
     const on=c.classList.contains('on');
@@ -386,69 +395,114 @@ function chipVal(root){const c=root.querySelector('.chip.on');return c?c.dataset
 function setChip(root,val){root.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x.dataset.val===val));}
 initChips($('[data-chip="affluenza"]'));
 
-/* ---------- Row templates ---------- */
+/* ================= RIGHE DINAMICHE ================= */
 function venditaRow(d={}){
   const el=document.createElement('div');el.className='row-item';el.dataset.type='vendita';
   el.innerHTML=`
     <button class="del" title="Rimuovi">×</button>
     <div class="grid">
-      <div class="field"><label>Ora</label><input type="time" data-f="ora" value="${d.ora||''}"></div>
-      <div class="field"><label>Codice</label><input type="text" data-f="codice" placeholder="cod." value="${d.codice||''}"></div>
-      <div class="field full"><label>Articolo / modello / taglia</label><input type="text" data-f="articolo" placeholder="es. Bikini Maestrale · 44" value="${d.articolo||''}"></div>
-      <div class="field"><label>Prezzo €</label><input type="number" inputmode="decimal" data-f="prezzo" min="0" step="0.01" placeholder="0" value="${d.prezzo||''}"></div>
-      <div class="field"><label>&nbsp;</label>
+      <div class="field"><label>Ora</label><input type="time" data-f="ora" value="${esc(d.ora)}"></div>
+      <div class="field"><label>Prezzo €</label><input type="number" inputmode="decimal" data-f="prezzo" min="0" step="0.01" placeholder="0" value="${esc(d.prezzo)}"></div>
+      <div class="field full"><label>Modello</label><select data-f="modello">${modelloOptions(d.modello)}</select></div>
+      <div class="field cat-field"><label>Colore</label><select data-f="colore"></select></div>
+      <div class="field cat-field"><label>Taglia</label><select data-f="taglia"></select></div>
+      <div class="field full altro-field"><label>Articolo (altro / accessorio)</label><input type="text" data-f="articolo" placeholder="es. Borsa rafia, gioiello…" value="${esc(d.articolo)}"></div>
+      <div class="field"><label>Vendita</label>
         <div class="chips" data-onef="tipo">
           <div class="chip tc ${d.tipo==='Pieno'?'on':''}" data-val="Pieno">Pieno</div>
           <div class="chip tc ${d.tipo==='Sconto'?'on':''}" data-val="Sconto">Sconto</div>
         </div></div>
-      <div class="field full"><label>&nbsp;</label>
+      <div class="field"><label>Cliente</label>
         <div class="chips" data-onef="cliente">
-          <div class="chip ${d.cliente==='Nuova'?'on':''}" data-val="Nuova">Nuova cliente</div>
+          <div class="chip ${d.cliente==='Nuova'?'on':''}" data-val="Nuova">Nuova</div>
           <div class="chip ${d.cliente==='Abituale'?'on':''}" data-val="Abituale">Abituale</div>
         </div></div>
+      <div class="field"><label>Provenienza</label><input type="text" data-f="provenienza" placeholder="Città" value="${esc(d.provenienza)}"></div>
+      <div class="field"><label>Contatto salvato?</label>
+        <div class="chips" data-onef="contatto">
+          <div class="chip ${d.contatto==='Sì'?'on':''}" data-val="Sì">Sì</div>
+          <div class="chip ${d.contatto==='No'?'on':''}" data-val="No">No</div>
+        </div></div>
     </div>`;
-  wireRow(el);return el;
+  wireCatRow(el,d,true);
+  return el;
 }
 function mancataRow(d={}){
   const el=document.createElement('div');el.className='row-item';el.dataset.type='mancata';
   el.innerHTML=`
     <button class="del">×</button>
     <div class="grid">
-      <div class="field full"><label>Prodotto / modello</label><input type="text" data-f="prodotto" value="${d.prodotto||''}"></div>
-      <div class="field"><label>Taglia</label><input type="text" data-f="taglia" value="${d.taglia||''}"></div>
-      <div class="field"><label>Colore</label><input type="text" data-f="colore" value="${d.colore||''}"></div>
-      <div class="field full"><label>Motivo principale</label>
-        <select data-f="motivo">
-          <option value="">—</option>
-          <option ${d.motivo==='Taglia esaurita'?'selected':''}>Taglia esaurita</option>
-          <option ${d.motivo==='Modello non disponibile'?'selected':''}>Modello non disponibile</option>
-          <option ${d.motivo==='Colore non disponibile'?'selected':''}>Colore non disponibile</option>
-          <option ${d.motivo==='Prezzo'?'selected':''}>Prezzo</option>
-          <option ${d.motivo==='Cliente indecisa'?'selected':''}>Cliente indecisa</option>
-          <option ${d.motivo==='Solo curiosità'?'selected':''}>Solo curiosità</option>
-          <option ${d.motivo==='Altro'?'selected':''}>Altro</option>
-        </select></div>
-      <div class="field"><label>Provenienza</label><input type="text" data-f="provenienza" placeholder="Città" value="${d.provenienza||''}"></div>
-      <div class="field"><label>Contatto salvato?</label>
-        <div class="chips" data-onef="contatto">
-          <div class="chip ${d.contatto==='Sì'?'on':''}" data-val="Sì">Sì</div>
-          <div class="chip ${d.contatto==='No'?'on':''}" data-val="No">No</div>
-        </div></div>
-      <div class="field full"><label>Nota / follow-up</label><input type="text" data-f="nota" value="${d.nota||''}"></div>
+      <div class="field full"><label>Modello richiesto</label><select data-f="modello">${modelloOptions(d.modello)}</select></div>
+      <div class="field cat-field"><label>Colore</label><select data-f="colore"></select></div>
+      <div class="field cat-field"><label>Taglia</label><select data-f="taglia"></select></div>
+      <div class="field full altro-field"><label>Articolo (altro)</label><input type="text" data-f="articolo" placeholder="modello non a catalogo…" value="${esc(d.articolo)}"></div>
+      <div class="field full"><label>Motivo principale</label><select data-f="motivo">${motivoOptions(d.motivo)}</select></div>
+      <div class="field full"><label>Nota / follow-up</label><input type="text" data-f="nota" value="${esc(d.nota)}"></div>
     </div>`;
-  wireRow(el);return el;
+  wireCatRow(el,d,false);
+  return el;
 }
+/* cablaggio comune delle righe con modello→colore→taglia */
+function wireCatRow(el,d,isVend){
+  const modSel=el.querySelector('[data-f=modello]');
+  const colSel=el.querySelector('[data-f=colore]');
+  const prz=el.querySelector('[data-f=prezzo]');
+  syncCat(el, d.colore, d.taglia, false);
+  modSel.addEventListener('change',()=>{ if(prz)prz.dataset.touched=''; syncCat(el,'','',true); recalc();saveDraft(); });
+  colSel.addEventListener('change',()=>{ syncCat(el,colSel.value,'',false); recalc();saveDraft(); });
+  if(prz)prz.addEventListener('input',()=>prz.dataset.touched='1');
+  // generic wiring
+  el.querySelector('.del').onclick=()=>{el.remove();recalc();saveDraft();};
+  el.querySelectorAll('[data-onef]').forEach(g=>g.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
+    const on=c.classList.contains('on');
+    g.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));
+    if(!on)c.classList.add('on');
+    recalc();saveDraft();
+  }));
+  el.querySelectorAll('input,textarea').forEach(i=>i.addEventListener('input',()=>{recalc();saveDraft();}));
+  el.querySelectorAll('select[data-f=motivo]').forEach(i=>i.addEventListener('change',()=>{recalc();saveDraft();}));
+}
+/* popola colore/taglia (e prezzo per le vendite) in base al modello scelto */
+function syncCat(el, wantColore, wantTaglia, setPrice){
+  const mod=el.querySelector('[data-f=modello]').value;
+  const p=modelByName(mod);
+  const colField=el.querySelector('[data-f=colore]').closest('.field');
+  const tagField=el.querySelector('[data-f=taglia]').closest('.field');
+  const altroField=el.querySelector('.altro-field');
+  const prz=el.querySelector('[data-f=prezzo]');
+  if(p){
+    colField.style.display=''; tagField.style.display=''; if(altroField)altroField.style.display='none';
+    const colSel=el.querySelector('[data-f=colore]');
+    colSel.innerHTML='<option value="">—</option>'+Object.keys(p.colori).map(c=>`<option ${c===(wantColore||'')?'selected':''}>${c}</option>`).join('');
+    const col=colSel.value;
+    const sizes=(col&&p.colori[col])||[];
+    const tagSel=el.querySelector('[data-f=taglia]');
+    tagSel.innerHTML='<option value="">—</option>'+sizes.map(t=>`<option ${(''+t)===(''+(wantTaglia||''))?'selected':''}>${t}</option>`).join('');
+    if(prz && setPrice && prz.dataset.touched!=='1') prz.value=p.prezzo;
+  }else if(mod==='Altro'){
+    colField.style.display='none'; tagField.style.display='none'; if(altroField)altroField.style.display='';
+  }else{
+    colField.style.display='none'; tagField.style.display='none'; if(altroField)altroField.style.display='none';
+  }
+}
+
 function clienteRow(d={}){
   const el=document.createElement('div');el.className='row-item';el.dataset.type='cliente';
   el.innerHTML=`
     <button class="del">×</button>
-    <div class="consent"><input type="checkbox" data-f="consenso" ${d.consenso?'checked':''}>
-      <span>La cliente ha dato il <b>consenso</b> a essere ricontattata. Salvare solo con consenso.</span></div>
+    <label class="consent"><input type="checkbox" data-f="consenso" ${d.consenso?'checked':''}>
+      <span>La cliente ha dato il <b>consenso</b> a essere ricontattata (WhatsApp / e-mail).</span></label>
+    <div class="privacy-note" data-role="privacy">
+      Informativa: i dati sono raccolti da CRU LE solo per offrire assistenza e comunicazioni sui prodotti,
+      conservati con cura e mai ceduti a terzi. La cliente può chiederne modifica o cancellazione in qualsiasi momento.
+      <span class="warn" data-role="warn" style="display:none"> · Contatto inserito senza consenso: spunta la casella per poterla ricontattare.</span>
+    </div>
     <div class="grid">
-      <div class="field"><label>Data</label><input type="date" data-f="data" value="${d.data||oggiIT()}"></div>
-      <div class="field"><label>Nome</label><input type="text" data-f="nome" value="${d.nome||''}"></div>
-      <div class="field full"><label>Contatto (WhatsApp / e-mail / tel)</label><input type="text" data-f="contatto" value="${d.contatto||''}"></div>
-      <div class="field"><label>Taglie (top/slip/intero)</label><input type="text" data-f="taglie" placeholder="es. 44 / 46 / 46" value="${d.taglie||''}"></div>
+      <div class="field"><label>Data</label><input type="date" data-f="data" value="${esc(d.data||new Date().toISOString().slice(0,10))}"></div>
+      <div class="field"><label>Nome</label><input type="text" data-f="nome" value="${esc(d.nome)}"></div>
+      <div class="field"><label>WhatsApp</label><input type="tel" inputmode="tel" data-f="whatsapp" placeholder="+39…" value="${esc(d.whatsapp)}"></div>
+      <div class="field"><label>E-mail</label><input type="email" inputmode="email" data-f="email" placeholder="nome@…" value="${esc(d.email)}"></div>
+      <div class="field"><label>Instagram</label><input type="text" data-f="instagram" placeholder="@…" value="${esc(d.instagram)}"></div>
       <div class="field"><label>Stato cliente</label>
         <select data-f="stato">
           <option ${!d.stato?'selected':''} value="">—</option>
@@ -456,24 +510,37 @@ function clienteRow(d={}){
           <option ${d.stato==='Abituale'?'selected':''}>Abituale</option>
           <option ${d.stato==='VIP'?'selected':''}>VIP</option>
         </select></div>
-      <div class="field full"><label>Preferenze</label><input type="text" data-f="preferenze" placeholder="bikini/intero, vita alta, colori neutri…" value="${d.preferenze||''}"></div>
-      <div class="field full"><label>Bisogni / vestibilità</label><input type="text" data-f="bisogni" placeholder="sostegno seno, copertura pancia, comodità…" value="${d.bisogni||''}"></div>
-      <div class="field full"><label>Acquisti effettuati</label><input type="text" data-f="acquisti" value="${d.acquisti||''}"></div>
-      <div class="field"><label>Provenienza (città)</label><input type="text" data-f="provenienza" value="${d.provenienza||''}"></div>
-      <div class="field"><label>Come ci ha conosciuto</label><input type="text" data-f="canale" placeholder="IG, Bagno, ads…" value="${d.canale||''}"></div>
-      <div class="field full"><label>Follow-up / quando ricontattare</label><input type="text" data-f="followup" placeholder="data + motivo concreto" value="${d.followup||''}"></div>
+      <div class="field"><label>Taglia intero</label><select data-f="tagliaIntero">${SIZE_OPTS(d.tagliaIntero)}</select></div>
+      <div class="field"><label>Taglia top</label><select data-f="tagliaTop">${SIZE_OPTS(d.tagliaTop)}</select></div>
+      <div class="field"><label>Taglia slip</label><select data-f="tagliaSlip">${SIZE_OPTS(d.tagliaSlip)}</select></div>
+      <div class="field"><label>Fascia d'età</label>
+        <select data-f="eta">
+          <option ${!d.eta?'selected':''} value="">—</option>
+          <option ${d.eta==='<35'?'selected':''}>&lt;35</option>
+          <option ${d.eta==='35–45'?'selected':''}>35–45</option>
+          <option ${d.eta==='46–55'?'selected':''}>46–55</option>
+          <option ${d.eta==='56–65'?'selected':''}>56–65</option>
+          <option ${d.eta==='>65'?'selected':''}>&gt;65</option>
+        </select></div>
+      <div class="field full"><label>Preferenze</label><input type="text" data-f="preferenze" placeholder="bikini/intero, vita alta, colori neutri…" value="${esc(d.preferenze)}"></div>
+      <div class="field full"><label>Bisogni / vestibilità</label><input type="text" data-f="bisogni" placeholder="sostegno seno, copertura pancia, comodità…" value="${esc(d.bisogni)}"></div>
+      <div class="field full"><label>Acquisti effettuati</label><input type="text" data-f="acquisti" value="${esc(d.acquisti)}"></div>
+      <div class="field"><label>Provenienza (città)</label><input type="text" data-f="provenienza" value="${esc(d.provenienza)}"></div>
+      <div class="field"><label>Come ci ha conosciuto</label><input type="text" data-f="canale" placeholder="IG, Bagno, passaparola…" value="${esc(d.canale)}"></div>
+      <div class="field full"><label>Follow-up / quando ricontattare</label><input type="text" data-f="followup" placeholder="data + motivo concreto" value="${esc(d.followup)}"></div>
     </div>`;
-  wireRow(el);return el;
+  // wiring
+  el.querySelector('.del').onclick=()=>{el.remove();saveClienti();};
+  const upd=()=>{ updateConsentWarn(el); saveClienti(); };
+  el.querySelectorAll('input,select').forEach(i=>i.addEventListener('input',upd));
+  el.querySelector('[data-f=consenso]').addEventListener('change',upd);
+  updateConsentWarn(el);
+  return el;
 }
-function wireRow(el){
-  el.querySelector('.del').onclick=()=>{el.remove();recalc();saveDraft();saveClienti();};
-  el.querySelectorAll('[data-onef]').forEach(g=>g.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
-    const on=c.classList.contains('on');
-    g.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));
-    if(!on)c.classList.add('on');
-    recalc();saveDraft();
-  }));
-  el.querySelectorAll('input,select,textarea').forEach(i=>i.addEventListener('input',()=>{recalc();saveDraft();saveClienti();}));
+function updateConsentWarn(el){
+  const consenso=el.querySelector('[data-f=consenso]').checked;
+  const hasContact=['whatsapp','email','instagram'].some(f=>el.querySelector(`[data-f=${f}]`).value.trim());
+  el.querySelector('[data-role=warn]').style.display=(hasContact&&!consenso)?'':'none';
 }
 
 /* ---------- Add buttons ---------- */
@@ -491,66 +558,90 @@ function getScheda(){
     ingressi:+$('#ingressi').value||0, acquirenti:+$('#acquirenti').value||0,
     vendite:$$('#vendite .row-item').map(rowData),
     mancate:$$('#mancate .row-item').map(rowData),
-    chiusura:{richiesto:$('#c-richiesto').value,motivo:$('#c-motivo').value,feedback:$('#c-feedback').value,azione:$('#c-azione').value}
+    chiusura:{
+      richiesto:$('#c-richiesto').value, motivo:$('#c-motivo').value,
+      feedback:$('#c-feedback').value, strategia:$('#c-strategia').value,
+      design:$('#c-design').value, azione:$('#c-azione').value
+    }
   };
 }
 
-/* ---------- Recalc KPIs ---------- */
-// una riga conta come pezzo venduto solo se compilata (articolo, codice o prezzo)
-const isVendita=v=>!!((v.articolo&&v.articolo.trim())||(v.codice&&v.codice.trim())||(+v.prezzo>0));
+/* ---------- filtri "riga compilata" ---------- */
+const isVendita=v=>{
+  const cat = v.modello && v.modello!=='' && v.modello!=='Altro';
+  return !!(cat || (v.articolo&&v.articolo.trim()) || (+v.prezzo>0));
+};
+const isMancata=v=>!!((v.modello&&v.modello!=='') || (v.articolo&&v.articolo.trim()) || (v.motivo&&v.motivo!==''));
+
+/* ---------- Recalc KPI + chiusura automatica ---------- */
+function topOf(arr){ // elemento più frequente di un array di stringhe
+  const c={}; arr.filter(Boolean).forEach(x=>c[x]=(c[x]||0)+1);
+  let best='',n=0; for(const k in c) if(c[k]>n){n=c[k];best=k;} return best;
+}
 function recalc(){
   const vend=$$('#vendite .row-item').map(rowData).filter(isVendita);
+  const manc=$$('#mancate .row-item').map(rowData).filter(isMancata);
   const pezzi=vend.length;
   const fat=vend.reduce((s,v)=>s+(+v.prezzo||0),0);
   const acq=+$('#acquirenti').value||0;
   const ing=+$('#ingressi').value||0;
-  const cont=$$('#clienti .row-item').filter(el=>el.querySelector('[data-f="nome"]').value.trim()||el.querySelector('[data-f="contatto"]').value.trim()).length;
-  const mv=$$('#mancate .row-item').length;
+  const cont=$$('#clienti .row-item').filter(el=>{
+    const c=el.querySelector('[data-f=consenso]').checked;
+    const has=el.querySelector('[data-f=nome]').value.trim()||['whatsapp','email','instagram'].some(f=>el.querySelector(`[data-f=${f}]`).value.trim());
+    return c&&has;
+  }).length;
   $('#pezzi').value=pezzi;
   $('#k-fat').textContent=eur(fat);
   $('#k-scont').textContent=acq?eur(fat/acq):'€0';
   $('#k-pps').textContent=acq?(pezzi/acq).toFixed(1):'0';
   $('#k-conv').textContent=ing?Math.round(acq/ing*100)+'%':'0%';
   $('#k-cont').textContent=cont;
-  $('#k-mv').textContent=mv;
+  $('#k-mv').textContent=manc.length;
+  // chiusura automatica (modificabile)
+  autoFill('#c-richiesto', topOf(vend.map(prodLabel)) || topOf(manc.map(prodLabel)));
+  autoFill('#c-motivo', topOf(manc.map(v=>v.motivo)));
 }
-/* ---------- Contatore ingressi (+1 / -1) ---------- */
-function setIngressi(n){n=Math.max(0,n|0);$('#ingressi').value=n;$('#ing-count').textContent=n;recalc();saveDraft();}
-function syncCounter(){$('#ing-count').textContent=+$('#ingressi').value||0;}
-$('#ing-plus').onclick=()=>setIngressi((+$('#ingressi').value||0)+1);
-$('#ing-minus').onclick=()=>setIngressi((+$('#ingressi').value||0)-1);
-
+function autoFill(sel,val){const el=$(sel); if(el.dataset.manual==='1')return; el.value=val||'';}
 ['ingressi','acquirenti'].forEach(id=>$('#'+id).addEventListener('input',()=>{recalc();saveDraft();}));
-['c-richiesto','c-motivo','c-feedback','c-azione','orario','data'].forEach(id=>$('#'+id).addEventListener('input',saveDraft));
+['c-feedback','c-strategia','c-design','c-azione','orario','data'].forEach(id=>$('#'+id).addEventListener('input',saveDraft));
+['c-richiesto','c-motivo'].forEach(id=>$('#'+id).addEventListener('input',()=>{$('#'+id).dataset.manual='1';saveDraft();}));
 $('#meteo').addEventListener('change',saveDraft);
 
 /* ---------- Draft persistence ---------- */
 function saveDraft(){recalc();localStorage.setItem(LS_DRAFT,JSON.stringify(getScheda()));}
 function loadDraft(){
   const d=JSON.parse(localStorage.getItem(LS_DRAFT)||'null');
-  $('#data').value=(d&&d.data)||oggiIT();
+  $('#data').value=(d&&d.data)||new Date().toISOString().slice(0,10);
   if(d){
     $('#orario').value=d.orario||'';$('#meteo').value=d.meteo||'';
     setChip($('[data-chip="affluenza"]'),d.affluenza);
     $('#ingressi').value=d.ingressi||'';$('#acquirenti').value=d.acquirenti||'';
     (d.vendite||[]).forEach(v=>$('#vendite').appendChild(venditaRow(v)));
     (d.mancate||[]).forEach(v=>$('#mancate').appendChild(mancataRow(v)));
-    if(d.chiusura){$('#c-richiesto').value=d.chiusura.richiesto||'';$('#c-motivo').value=d.chiusura.motivo||'';$('#c-feedback').value=d.chiusura.feedback||'';$('#c-azione').value=d.chiusura.azione||'';}
+    if(d.chiusura){
+      const c=d.chiusura;
+      if(c.richiesto){$('#c-richiesto').value=c.richiesto;$('#c-richiesto').dataset.manual='1';}
+      if(c.motivo){$('#c-motivo').value=c.motivo;$('#c-motivo').dataset.manual='1';}
+      $('#c-feedback').value=c.feedback||'';$('#c-strategia').value=c.strategia||'';
+      $('#c-design').value=c.design||'';$('#c-azione').value=c.azione||'';
+    }
   }
   if(!$$('#vendite .row-item').length)$('#vendite').appendChild(venditaRow());
-  syncCounter();recalc();
+  recalc();
 }
 
-/* ---------- Clienti persistence (permanent registry) ---------- */
+/* ---------- Registro clienti (permanente) ---------- */
 function saveClienti(){const arr=$$('#clienti .row-item').map(rowData);localStorage.setItem(LS_CLI,JSON.stringify(arr));recalc();}
 function loadClienti(){const arr=JSON.parse(localStorage.getItem(LS_CLI)||'[]');arr.forEach(c=>$('#clienti').appendChild(clienteRow(c)));if(!arr.length)$('#clienti').appendChild(clienteRow());}
 
-/* ---------- Save day ---------- */
+/* ---------- Salva giornata ---------- */
 $('#btn-salva').onclick=()=>{
   const s=getScheda();
   if(!s.data){toast('Inserisci la data');return;}
-  const vend=s.vendite.filter(isVendita);const fat=vend.reduce((a,v)=>a+(+v.prezzo||0),0);
-  s.fatturato=fat;s.pezzi=vend.length;s.savedAt=new Date().toISOString();
+  s.vendite=s.vendite.filter(isVendita);
+  s.mancate=s.mancate.filter(isMancata);
+  const fat=s.vendite.reduce((a,v)=>a+(+v.prezzo||0),0);
+  s.fatturato=fat;s.pezzi=s.vendite.length;s.savedAt=new Date().toISOString();
   const days=JSON.parse(localStorage.getItem(LS_DAYS)||'[]');
   const i=days.findIndex(d=>d.data===s.data);
   if(i>=0)days[i]=s;else days.push(s);
@@ -559,22 +650,22 @@ $('#btn-salva').onclick=()=>{
   toast('Giornata salvata ✓');
 };
 
-/* ---------- New ---------- */
+/* ---------- Nuova ---------- */
 $('#btn-nuova').onclick=()=>{
   if(!confirm('Iniziare una nuova scheda? I dati non salvati del giorno andranno persi (il registro clienti resta).'))return;
   localStorage.removeItem(LS_DRAFT);
   $('#vendite').innerHTML='';$('#mancate').innerHTML='';
-  ['orario','ingressi','acquirenti','c-richiesto','c-motivo','c-feedback','c-azione'].forEach(id=>$('#'+id).value='');
+  ['orario','ingressi','acquirenti','c-richiesto','c-motivo','c-feedback','c-strategia','c-design','c-azione'].forEach(id=>$('#'+id).value='');
+  ['c-richiesto','c-motivo'].forEach(id=>$('#'+id).dataset.manual='');
   $('#meteo').value='';setChip($('[data-chip="affluenza"]'),'');
-  $('#data').value=oggiIT();
-  syncCounter();
+  $('#data').value=new Date().toISOString().slice(0,10);
   $('#vendite').appendChild(venditaRow());recalc();saveDraft();toast('Nuova scheda');
 };
 
-/* ---------- Print ---------- */
+/* ---------- Stampa ---------- */
 $('#btn-stampa').onclick=()=>window.print();
 
-/* ---------- History ---------- */
+/* ================= STORICO ================= */
 function renderHist(){
   const days=JSON.parse(localStorage.getItem(LS_DAYS)||'[]');
   const box=$('#hist-list');
@@ -600,117 +691,150 @@ function fmtDate(s){if(!s)return'—';const[y,m,d]=s.split('-');return`${d}/${m}
 function loadDay(d){
   if(!confirm('Aprire la scheda del '+fmtDate(d.data)+'? Sostituirà la scheda attuale.'))return;
   localStorage.setItem(LS_DRAFT,JSON.stringify(d));
-  $('#vendite').innerHTML='';$('#mancate').innerHTML='';
   location.reload();
 }
 
-/* ---------- Export CSV ---------- */
-$('#export-all').onclick=()=>{
+/* ================= STATISTICHE ================= */
+function pct(n,tot){return tot?Math.round(n/tot*100):0;}
+function barList(entries, cls){ // entries: [{label,val}]
+  const tot=entries.reduce((s,e)=>s+e.val,0);
+  if(!tot)return '<div class="hint">Nessun dato.</div>';
+  return entries.sort((a,b)=>b.val-a.val).map(e=>{
+    const p=pct(e.val,tot);
+    return `<div class="bar-row"><div class="bar-top"><span class="lab">${e.label}</span><span class="pct">${p}% · ${e.val}</span></div>
+      <div class="bar-track"><div class="bar-fill ${cls||''}" style="width:${p}%"></div></div></div>`;
+  }).join('');
+}
+function countBy(arr,key){const c={};arr.forEach(x=>{const k=(typeof key==='function'?key(x):x[key]);if(k&&(''+k).trim())c[k]=(c[k]||0)+1;});return c;}
+function toEntries(obj){return Object.keys(obj).map(k=>({label:k,val:obj[k]}));}
+function normCity(s){s=(s||'').trim();return s?s.charAt(0).toUpperCase()+s.slice(1).toLowerCase():'';}
+
+function renderStats(){
   const days=JSON.parse(localStorage.getItem(LS_DAYS)||'[]');
-  if(!days.length){toast('Niente da esportare');return;}
-  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
-  let csv='Data;Orario;Meteo;Affluenza;Ingressi;Clienti acquirenti;Pezzi venduti;Fatturato;Scontrino medio;Pezzi per scontrino;Conversione %;Mancate vendite;Prodotto piu richiesto;Motivo n.1 mancata;Feedback;Azione domani\n';
-  days.forEach(d=>{
-    const acq=d.acquirenti||0,ing=d.ingressi||0,fat=d.fatturato||0,pz=d.pezzi||0;
-    csv+=[d.data,d.orario,d.meteo,d.affluenza,ing,acq,pz,fat.toFixed(2),
-      acq?(fat/acq).toFixed(2):'',acq?(pz/acq).toFixed(1):'',ing?Math.round(acq/ing*100):'',
-      (d.mancate||[]).length,d.chiusura?.richiesto,d.chiusura?.motivo,d.chiusura?.feedback,d.chiusura?.azione
-    ].map(q).join(';')+'\n';
-  });
-  dl(csv,'CRU_LE_KPI_'+new Date().toISOString().slice(0,10)+'.csv');
-  toast('CSV esportato ✓');
-};
+  const clienti=JSON.parse(localStorage.getItem(LS_CLI)||'[]').filter(c=>(c.nome&&c.nome.trim())||c.whatsapp||c.email||c.instagram);
+  const box=$('#stats-content');
+  const allVend=[]; const allManc=[];
+  days.forEach(d=>{(d.vendite||[]).filter(isVendita).forEach(v=>allVend.push(v));(d.mancate||[]).filter(isMancata).forEach(m=>allManc.push(m));});
+
+  if(!days.length && !clienti.length){
+    box.innerHTML='<div class="empty">Ancora nessun dato.<br>Salva qualche giornata e registra clienti per vedere le statistiche.</div>';return;
+  }
+  const fatTot=allVend.reduce((s,v)=>s+(+v.prezzo||0),0);
+
+  // provenienza: da vendite + registro clienti
+  const provObj={};
+  allVend.forEach(v=>{const c=normCity(v.provenienza);if(c)provObj[c]=(provObj[c]||0)+1;});
+  clienti.forEach(v=>{const c=normCity(v.provenienza);if(c)provObj[c]=(provObj[c]||0)+1;});
+
+  // età (registro clienti)
+  const etaObj=countBy(clienti,'eta');
+  // best seller
+  const modObj=countBy(allVend.filter(v=>v.modello&&v.modello!=='Altro'),'modello');
+  const colObj=countBy(allVend.filter(v=>v.colore),'colore');
+  const tagObj=countBy(allVend.filter(v=>v.taglia),'taglia');
+  const topMod=topOfObj(modObj), topCol=topOfObj(colObj), topTag=topOfObj(tagObj);
+  // fatturato per modello
+  const revObj={}; allVend.forEach(v=>{if(v.modello&&v.modello!=='Altro')revObj[v.modello]=(revObj[v.modello]||0)+(+v.prezzo||0);});
+  // motivi mancate
+  const motObj=countBy(allManc,'motivo');
+  const consN=clienti.filter(c=>c.consenso).length;
+
+  box.innerHTML=`
+    <div class="stat-hi">
+      <div class="kpi-box"><div class="v">${clienti.length}</div><div class="l">Clienti registrate</div></div>
+      <div class="kpi-box"><div class="v">${consN}</div><div class="l">Con consenso</div></div>
+      <div class="kpi-box"><div class="v">${days.length}</div><div class="l">Giornate</div></div>
+      <div class="kpi-box"><div class="v">${eur(fatTot)}</div><div class="l">Fatturato totale</div></div>
+      <div class="kpi-box"><div class="v">${allVend.length}</div><div class="l">Pezzi venduti</div></div>
+      <div class="kpi-box"><div class="v">${allManc.length}</div><div class="l">Mancate vendite</div></div>
+    </div>
+
+    <div class="stat-group"><h3>🏆 Best seller</h3>
+      <div class="stat-hi">
+        <div class="kpi-box"><div class="v">${topMod||'—'}</div><div class="l">Modello top</div></div>
+        <div class="kpi-box"><div class="v">${topCol||'—'}</div><div class="l">Colore top</div></div>
+        <div class="kpi-box"><div class="v">${topTag||'—'}</div><div class="l">Taglia top</div></div>
+      </div>
+      ${barList(toEntries(modObj),'')}
+    </div>
+
+    <div class="stat-group"><h3>💶 Fatturato per modello</h3>
+      ${barList(toEntries(revObj),'ar')}
+    </div>
+
+    <div class="stat-group"><h3>📍 Provenienza clienti</h3>
+      ${barList(toEntries(provObj),'aq')}
+    </div>
+
+    <div class="stat-group"><h3>👤 Fascia d'età</h3>
+      ${barList(toEntries(etaObj),'ol')}
+    </div>
+
+    <div class="stat-group"><h3>🎨 Colori più venduti</h3>
+      ${barList(toEntries(colObj),'ar')}
+    </div>
+
+    <div class="stat-group"><h3>📐 Taglie più vendute</h3>
+      ${barList(toEntries(tagObj),'aq')}
+    </div>
+
+    <div class="stat-group"><h3>🚫 Motivi di mancata vendita</h3>
+      ${barList(toEntries(motObj),'')}
+    </div>
+  `;
+}
+function topOfObj(o){let best='',n=0;for(const k in o)if(o[k]>n){n=o[k];best=k;}return best;}
+
+/* ================= EXPORT (CSV / Excel) ================= */
+const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
 function dl(text,name){
   const blob=new Blob(['﻿'+text],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();
 }
-
-/* ---------- Backup registro clienti ---------- */
-function csvClienti(){
-  const arr=JSON.parse(localStorage.getItem(LS_CLI)||'[]')
-    .filter(c=>(c.nome||'').trim()||(c.contatto||'').trim());
-  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
-  const cols=[['data','Data'],['nome','Nome'],['contatto','Contatto'],['taglie','Taglie'],
-    ['stato','Stato'],['preferenze','Preferenze'],['bisogni','Bisogni'],['acquisti','Acquisti'],
-    ['provenienza','Provenienza'],['canale','Come ci ha conosciuto'],['followup','Follow-up'],
-    ['consenso','Consenso']];
-  let csv=cols.map(c=>c[1]).join(';')+'\n';
-  arr.forEach(c=>{csv+=cols.map(col=>q(col[0]==='consenso'?(c.consenso?'Sì':'No'):c[col[0]])).join(';')+'\n';});
-  return {csv,n:arr.length};
-}
-function markBackup(){localStorage.setItem(LS_BK,oggiIT());renderBackupState();$('#bk-nudge')&&$('#bk-nudge').remove();}
-
-$('#export-clienti').onclick=()=>{
-  const {csv,n}=csvClienti();
-  if(!n){toast('Nessuna cliente da salvare');return;}
-  dl(csv,'CRU_LE_clienti_'+oggiIT()+'.csv');
-  markBackup();toast(n+' clienti salvate ✓');
-};
-$('#export-tutto').onclick=()=>{
+/* riepilogo per giornata */
+$('#export-all').onclick=()=>{
   const days=JSON.parse(localStorage.getItem(LS_DAYS)||'[]');
-  $('#export-all').click();           // riusa l'export giornate esistente
-  const {csv,n}=csvClienti();
-  if(n)dl(csv,'CRU_LE_clienti_'+oggiIT()+'.csv');
-  markBackup();
+  if(!days.length){toast('Niente da esportare');return;}
+  let csv='Data;Orario;Meteo;Affluenza;Ingressi;Clienti acquirenti;Pezzi venduti;Fatturato;Scontrino medio;Pezzi per scontrino;Conversione %;Mancate vendite;Prodotto piu richiesto;Motivo n.1 mancata;Feedback;Idee strategiche;Note design;Azione domani\n';
+  days.forEach(d=>{
+    const acq=d.acquirenti||0,ing=d.ingressi||0,fat=d.fatturato||0,pz=d.pezzi||0,c=d.chiusura||{};
+    csv+=[d.data,d.orario,d.meteo,d.affluenza,ing,acq,pz,fat.toFixed(2),
+      acq?(fat/acq).toFixed(2):'',acq?(pz/acq).toFixed(1):'',ing?Math.round(acq/ing*100):'',
+      (d.mancate||[]).length,c.richiesto,c.motivo,c.feedback,c.strategia,c.design,c.azione
+    ].map(q).join(';')+'\n';
+  });
+  dl(csv,'CRU_LE_Riepilogo_'+new Date().toISOString().slice(0,10)+'.csv');
+  toast('Esportato ✓');
 };
-
-/* Condividi -> Drive (menu di sistema del telefono). Appare solo se supportato. */
-(function(){
-  const btn=$('#share-drive');
-  const probe=new File(['x'],'x.csv',{type:'text/csv'});
-  if(navigator.canShare && navigator.canShare({files:[probe]})){
-    btn.style.display=''; $('#drive-hint').style.display='';
-    btn.onclick=async()=>{
-      const {csv,n}=csvClienti();
-      if(!n){toast('Nessuna cliente da salvare');return;}
-      const file=new File(['﻿'+csv],'CRU_LE_clienti_'+oggiIT()+'.csv',{type:'text/csv'});
-      try{
-        await navigator.share({files:[file],title:'Registro clienti CRU LE',text:'Backup registro clienti CRU LE'});
-        markBackup();toast('Condiviso ✓');
-      }catch(e){ /* utente ha annullato: nessun errore da mostrare */ }
-    };
-  }
-})();
-
-/* Stato "ultimo backup" + promemoria dolce ogni 7 giorni */
-function giorniDa(iso){if(!iso)return null;const a=new Date(iso+'T12:00'),b=new Date(oggiIT()+'T12:00');return Math.round((b-a)/86400000);}
-function renderBackupState(){
-  const box=$('#backup-state');if(!box)return;
-  const {n}=csvClienti();const last=localStorage.getItem(LS_BK);const g=giorniDa(last);
-  const stale=g===null||g>=7;
-  box.innerHTML=`<div class="bk ${stale&&n?'warn':''}"><div class="dot"></div><div>
-    <div class="t">${n} client${n===1?'e':'i'} nel registro</div>
-    <div class="s">${last?('Ultimo backup: '+fmtDate(last)+(g?` · ${g} giorn${g===1?'o':'i'} fa`:' · oggi')):'Backup mai fatto'}</div>
-  </div></div>`;
-}
-function maybeNudge(){
-  const {n}=csvClienti();if(!n)return;
-  const g=giorniDa(localStorage.getItem(LS_BK));
-  if(g!==null&&g<7)return;
-  if(sessionStorage.getItem('bkNudgeChiuso'))return;
-  const host=$('#view-scheda');if(!host||$('#bk-nudge'))return;
-  const el=document.createElement('div');el.className='bk-nudge';el.id='bk-nudge';
-  el.innerHTML=`<span>💾</span><div><b>Fai una copia del registro clienti.</b>
-    <div class="s" style="color:var(--roccia);font-size:12px;margin-top:2px">
-    ${g===null?'Non hai mai scaricato il backup.':'Ultimo backup '+g+' giorni fa.'} Bastano 5 secondi.</div>
-    <button class="btn btn-primary" style="margin-top:10px;width:auto;padding:10px 16px" id="bk-nudge-go">Scarica ora</button></div>
-    <button class="x" id="bk-nudge-x" title="Più tardi">×</button>`;
-  host.insertBefore(el,host.firstChild);
-  $('#bk-nudge-go').onclick=()=>{$$('.tab').forEach(x=>x.classList.remove('active'));
-    $('.tab[data-view="storico"]').classList.add('active');
-    $$('.view').forEach(v=>v.classList.remove('active'));$('#view-storico').classList.add('active');
-    renderBackupState();$('#export-clienti').click();window.scrollTo(0,0);};
-  $('#bk-nudge-x').onclick=()=>{sessionStorage.setItem('bkNudgeChiuso','1');el.remove();};
-}
-
-/* ---------- Recensioni (QR) ---------- */
-const REVIEW_URL="https://search.google.com/local/writereview?placeid=ChIJ477KEpbPKRMRHXeifENzUOk";
-const QR_DATAURI="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAYMAAAGDAQMAAADzqu5RAAAABlBMVEVLPzT///+cfiXTAAACl0lEQVR42u2cu43DMAyG6XPhMiNkFI+WjOZRMoJKF0YU8Sk5XYoDaOBXcRAMs8kHPn6SPqo/nhfBAhawgAUsThYv0rPWshxyu7enb6rPtdZ9bvenvcEv/9GvBxb/aSFQbkKz8SqBkho4vfA7jFKYgmBSgrti4ssk4Gq/zOKMzU9nEMxPkMT1Hi2ucjitdeM3pgqCFyLIvPjwE3pskRBB8BJ5UAn2SqadYj6IPJiaoNeizRkt631fUIumJjhoi64mDouiuwbP/g5+3ax5UPWgUNroxjGTz+CDMwjmjaKL+ZehpHtx9xSmrTplsT+BYOI8yOWKFTAteLLrDbWNiH3VFyCYNw8yOFMTm+VBiaInWQGCOQkWExHmeo2getygL1CLZvdBDp7fRami1NqGvRJ5ML8PEpcrEk4XY1r6E+TBxD64z+F6Yx6UksYDLHwwtZo4bIS0h4g4htmEtmsIBDMTFNfrUdS7aqbxWWiAYO6ezFRjsNtrG53waq8bejB3LWpZz8OpNrRD2ksUhR5M3ZOxDszNsl4ETyJbt3ihL5p/wiuXUzOtbsOgEH3R7HlQPM71e/F1CxvfkypEEMysB6MnE1nP5oPaMoUezO2Dkux6X5S6V2otuvZIi183J0Hfipld/floXsFFgxQEcxKsx2nBSWb0UdJIHtQ+Gwjm98EY9cp8MHaACbOJ7D5o08BY9F3CB+e3vwqCiXsyPhbUsypTK0FPvVMQTNqTUXC150FvzsTONmrRS+xs+65atEP7qjYmvNf4dimKUmuv+fdotvIEgtkJUl954r+6ZaGZEV21qxDUhFj8SyVVE4+Q9iCYOg/WqlF0HfpsLgMxH7zKt0v28bVoB/8mtDdnQDC3HsR/jYAFLGABix8tPhmSPdpDUTZ1AAAAAElFTkSuQmCC";
-$('#qr-img').src=QR_DATAURI;
-$('#apri-recensione').href=REVIEW_URL;
+/* elenco tipo fattura: una riga per pezzo venduto */
+$('#export-fattura').onclick=()=>{
+  const days=JSON.parse(localStorage.getItem(LS_DAYS)||'[]');
+  const rows=[];
+  days.forEach(d=>(d.vendite||[]).filter(isVendita).forEach(v=>{
+    rows.push([d.data,v.ora,(v.modello&&v.modello!=='Altro')?v.modello:(v.articolo||''),v.colore,v.taglia,
+      (+v.prezzo||0).toFixed(2),v.tipo,v.cliente,v.provenienza,v.contatto]);
+  }));
+  if(!rows.length){toast('Nessun venduto da esportare');return;}
+  let csv='Data;Ora;Modello/Articolo;Colore;Taglia;Prezzo;Vendita;Cliente;Provenienza;Contatto salvato\n';
+  rows.forEach(r=>csv+=r.map(q).join(';')+'\n');
+  const tot=rows.reduce((s,r)=>s+parseFloat(r[5]||0),0);
+  csv+=[';;;;;','TOTALE '+tot.toFixed(2)].join('')+'\n';
+  dl(csv,'CRU_LE_Venduto_'+new Date().toISOString().slice(0,10)+'.csv');
+  toast('Elenco venduto esportato ✓');
+};
+/* registro clienti */
+$('#export-clienti').onclick=()=>{
+  const clienti=JSON.parse(localStorage.getItem(LS_CLI)||'[]').filter(c=>(c.nome&&c.nome.trim())||c.whatsapp||c.email||c.instagram);
+  if(!clienti.length){toast('Registro vuoto');return;}
+  let csv='Data;Nome;Consenso;WhatsApp;Email;Instagram;Stato;Fascia eta;Taglia intero;Taglia top;Taglia slip;Preferenze;Bisogni;Acquisti;Provenienza;Canale;Follow-up\n';
+  clienti.forEach(c=>{csv+=[c.data,c.nome,c.consenso?'Sì':'No',c.whatsapp,c.email,c.instagram,c.stato,c.eta,
+    c.tagliaIntero,c.tagliaTop,c.tagliaSlip,c.preferenze,c.bisogni,c.acquisti,c.provenienza,c.canale,c.followup].map(q).join(';')+'\n';});
+  dl(csv,'CRU_LE_Clienti_'+new Date().toISOString().slice(0,10)+'.csv');
+  toast('Registro clienti esportato ✓');
+};
 
 /* ---------- Init ---------- */
-loadDraft();loadClienti();renderBackupState();maybeNudge();
+loadDraft();loadClienti();
 
 /* ---------- Offline (service worker) ---------- */
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
