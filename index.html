@@ -92,6 +92,24 @@
     background-repeat:no-repeat; background-position:right 14px center; padding-right:34px}
   .autofill{background:#F6F1E6; border-style:dashed}
 
+  /* ---------- Contatore ingressi ---------- */
+  .counter{display:flex; align-items:center; justify-content:center; gap:18px; padding:8px 0 2px}
+  .cbtn{flex:0 0 auto; width:60px; height:60px; border-radius:50%; border:1px solid var(--linea);
+    background:#fff; color:var(--terracotta); font-size:26px; cursor:pointer; box-shadow:var(--ombra);
+    line-height:1; user-select:none; transition:transform .08s}
+  .cbtn:active{transform:scale(.92)}
+  .cbtn.plus{width:104px; height:104px; font-size:30px; letter-spacing:.02em;
+    background:var(--terracotta); color:#fff; border-color:var(--terracotta)}
+  .cval{text-align:center; min-width:96px}
+  .cval span{display:block; font-size:52px; color:var(--corteccia); line-height:1; font-family:'Cormorant Garamond',serif}
+  .cval small{font-size:11px; letter-spacing:.06em; color:var(--oliva); text-transform:uppercase}
+
+  /* ---------- QR recensioni ---------- */
+  .qr-wrap{display:inline-block; padding:16px; background:#fff; border:1px solid var(--linea);
+    border-radius:16px; box-shadow:var(--ombra); margin:6px auto 4px}
+  #qr-img{display:block; width:240px; height:240px; image-rendering:pixelated}
+  .qr-cta{font-size:18px; color:var(--corteccia); line-height:1.5; margin:14px 0 16px}
+
   /* ---------- KPI live cards ---------- */
   .kpi-live{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:4px}
   .kpi-box{
@@ -218,6 +236,7 @@
     <button class="tab" data-view="clienti">Clienti</button>
     <button class="tab" data-view="stats">Statistiche</button>
     <button class="tab" data-view="storico">Storico</button>
+    <button class="tab" data-view="recensioni">⭐</button>
   </div>
 </header>
 
@@ -249,8 +268,14 @@
     <!-- 1. Numeri del giorno -->
     <section class="card">
       <h2 class="sec-title"><span class="n">1</span> Numeri del giorno</h2>
-      <div class="grid-3">
-        <div class="field"><label>Ingressi</label><input type="number" inputmode="numeric" id="ingressi" min="0" placeholder="0"></div>
+      <p class="sub" style="margin-top:-4px">Tocca <b>＋1</b> ogni volta che entra una cliente.</p>
+      <div class="counter">
+        <button type="button" class="cbtn" id="ing-minus" aria-label="Togli un ingresso">−</button>
+        <div class="cval"><span id="ing-count">0</span><small>clienti entrati oggi</small></div>
+        <button type="button" class="cbtn plus" id="ing-plus" aria-label="Aggiungi un ingresso">＋1</button>
+      </div>
+      <input type="hidden" id="ingressi" value="">
+      <div class="grid" style="margin-top:16px">
         <div class="field"><label>Clienti acquirenti</label><input type="number" inputmode="numeric" id="acquirenti" min="0" placeholder="0"></div>
         <div class="field"><label>Pezzi venduti</label><input type="number" id="pezzi" readonly></div>
       </div>
@@ -326,6 +351,18 @@
       <h2 class="sec-title"><span class="n">≡</span> Giornate salvate</h2>
       <div id="hist-list"></div>
       <button class="btn btn-ghost" id="export-all" style="margin-top:8px">⬇︎ Riepilogo giornate (Excel)</button>
+    </section>
+  </div>
+
+  <!-- ============ VIEW: RECENSIONI ============ -->
+  <div class="view" id="view-recensioni">
+    <section class="card" style="text-align:center">
+      <h2 class="sec-title" style="justify-content:center"><span class="n">⭐</span> Lascia una recensione</h2>
+      <p class="sub" style="text-align:center">Gira lo schermo verso la cliente.<br>Inquadra il codice con la fotocamera del telefono.</p>
+      <div class="qr-wrap"><img id="qr-img" alt="QR recensioni CRU LE su Google" width="240" height="240"></div>
+      <p class="qr-cta serif">Grazie per aver scelto <b>CRU&nbsp;LE</b> ♥<br>Il tuo racconto aiuta chi cerca autenticità.</p>
+      <a class="btn btn-primary" id="apri-recensione" href="#" target="_blank" rel="noopener" style="margin-top:6px">Apri direttamente su questo telefono</a>
+      <p class="hint">Il codice porta alla pagina Google di CRU LE. Poi basta toccare le stelline.</p>
     </section>
   </div>
 </main>
@@ -635,6 +672,13 @@ function recalc(){
   autoFill('#c-motivo', topOf(manc.map(v=>v.motivo)));
 }
 function autoFill(sel,val){const el=$(sel); if(el.dataset.manual==='1')return; el.value=val||'';}
+
+/* ---------- Contatore ingressi (+1 / −1) ---------- */
+function setIngressi(n){n=Math.max(0,n|0);$('#ingressi').value=n;$('#ing-count').textContent=n;recalc();saveDraft();}
+function syncCounter(){$('#ing-count').textContent=+$('#ingressi').value||0;}
+$('#ing-plus').onclick=()=>setIngressi((+$('#ingressi').value||0)+1);
+$('#ing-minus').onclick=()=>setIngressi((+$('#ingressi').value||0)-1);
+
 ['ingressi','acquirenti'].forEach(id=>$('#'+id).addEventListener('input',()=>{recalc();saveDraft();}));
 ['c-feedback','c-strategia','c-design','c-azione','orario','data'].forEach(id=>$('#'+id).addEventListener('input',saveDraft));
 ['c-richiesto','c-motivo'].forEach(id=>$('#'+id).addEventListener('input',()=>{$('#'+id).dataset.manual='1';saveDraft();}));
@@ -660,7 +704,7 @@ function loadDraft(){
     }
   }
   if(!$$('#vendite .row-item').length)$('#vendite').appendChild(venditaRow());
-  recalc();
+  syncCounter();recalc();
 }
 
 /* ---------- Registro clienti (permanente) ---------- */
@@ -692,6 +736,7 @@ $('#btn-nuova').onclick=()=>{
   ['c-richiesto','c-motivo'].forEach(id=>$('#'+id).dataset.manual='');
   $('#meteo').value='';setChip($('[data-chip="affluenza"]'),'');
   $('#data').value=new Date().toISOString().slice(0,10);
+  syncCounter();
   $('#vendite').appendChild(venditaRow());recalc();saveDraft();toast('Nuova scheda');
 };
 
@@ -866,6 +911,12 @@ $('#export-clienti').onclick=()=>{
   dl(csv,'CRU_LE_Clienti_'+new Date().toISOString().slice(0,10)+'.csv');
   toast('Registro clienti esportato ✓');
 };
+
+/* ---------- Recensioni (QR Google) ---------- */
+const REVIEW_URL="https://search.google.com/local/writereview?placeid=ChIJ477KEpbPKRMRHXeifENzUOk";
+const QR_DATAURI="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAYMAAAGDAQMAAADzqu5RAAAABlBMVEVLPzT///+cfiXTAAACl0lEQVR42u2cu43DMAyG6XPhMiNkFI+WjOZRMoJKF0YU8Sk5XYoDaOBXcRAMs8kHPn6SPqo/nhfBAhawgAUsThYv0rPWshxyu7enb6rPtdZ9bvenvcEv/9GvBxb/aSFQbkKz8SqBkho4vfA7jFKYgmBSgrti4ssk4Gq/zOKMzU9nEMxPkMT1Hi2ucjitdeM3pgqCFyLIvPjwE3pskRBB8BJ5UAn2SqadYj6IPJiaoNeizRkt631fUIumJjhoi64mDouiuwbP/g5+3ax5UPWgUNroxjGTz+CDMwjmjaKL+ZehpHtx9xSmrTplsT+BYOI8yOWKFTAteLLrDbWNiH3VFyCYNw8yOFMTm+VBiaInWQGCOQkWExHmeo2getygL1CLZvdBDp7fRami1NqGvRJ5ML8PEpcrEk4XY1r6E+TBxD64z+F6Yx6UksYDLHwwtZo4bIS0h4g4htmEtmsIBDMTFNfrUdS7aqbxWWiAYO6ezFRjsNtrG53waq8bejB3LWpZz8OpNrRD2ksUhR5M3ZOxDszNsl4ETyJbt3ihL5p/wiuXUzOtbsOgEH3R7HlQPM71e/F1CxvfkypEEMysB6MnE1nP5oPaMoUezO2Dkux6X5S6V2otuvZIi183J0Hfipld/floXsFFgxQEcxKsx2nBSWb0UdJIHtQ+Gwjm98EY9cp8MHaACbOJ7D5o08BY9F3CB+e3vwqCiXsyPhbUsypTK0FPvVMQTNqTUXC150FvzsTONmrRS+xs+65atEP7qjYmvNf4dimKUmuv+fdotvIEgtkJUl954r+6ZaGZEV21qxDUhFj8SyVVE4+Q9iCYOg/WqlF0HfpsLgMxH7zKt0v28bVoB/8mtDdnQDC3HsR/jYAFLGABix8tPhmSPdpDUTZ1AAAAAElFTkSuQmCC";
+if($('#qr-img'))$('#qr-img').src=QR_DATAURI;
+if($('#apri-recensione'))$('#apri-recensione').href=REVIEW_URL;
 
 /* ---------- Init ---------- */
 loadDraft();loadClienti();
