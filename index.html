@@ -214,6 +214,22 @@
   .bar-fill.aq{background:var(--acqua)} .bar-fill.ar{background:var(--argilla)} .bar-fill.ol{background:var(--oliva)}
   .stat-hi{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:18px}
   .stat-hi .kpi-box .v{font-size:18px} .stat-hi .kpi-box .l{margin-top:5px}
+  /* period selector */
+  .per-sel{display:flex; gap:6px; flex-wrap:wrap; margin:2px 0 18px}
+  .per-chip{padding:7px 13px; border-radius:20px; border:1px solid var(--sabbia); background:#fff;
+    font-size:12.5px; color:var(--corteccia); cursor:pointer; user-select:none; transition:.15s}
+  .per-chip.on{background:var(--terracotta); color:#fff; border-color:var(--terracotta)}
+  /* delta vs periodo precedente */
+  .delta{font-size:11px; margin-top:5px; letter-spacing:.02em}
+  .delta.up{color:var(--oliva)} .delta.down{color:var(--terracotta)} .delta.flat{color:var(--roccia)}
+  /* resoconto testuale */
+  .resoconto{background:linear-gradient(160deg,#F3ECDD,#FBF8F0); border:1px solid var(--linea);
+    border-radius:var(--radius); padding:16px 18px; margin:2px 0 22px;
+    font-family:'Cormorant Garamond',serif; font-size:17px; line-height:1.55; color:var(--corteccia)}
+  .resoconto b{font-family:'Tenor Sans',sans-serif; font-weight:400; font-size:15px; color:var(--terracotta)}
+  .stat-div{height:1px; background:var(--linea); margin:26px 0 20px}
+  .stat-sub{font-size:12px; color:var(--roccia); font-family:'Cormorant Garamond',serif;
+    font-style:italic; margin:-8px 0 14px}
 
   .toast{
     position:fixed; bottom:96px; left:50%; transform:translateX(-50%) translateY(20px);
@@ -351,7 +367,14 @@
   <div class="view" id="view-stats">
     <section class="card">
       <h2 class="sec-title"><span class="n">▤</span> Statistiche</h2>
-      <p class="sub">Riepilogo su tutte le giornate salvate e sul registro clienti.</p>
+      <p class="sub">Scegli un periodo: l'app calcola i numeri e ti scrive un resoconto.</p>
+      <div class="per-sel" id="per-sel">
+        <div class="per-chip" data-per="oggi">Oggi</div>
+        <div class="per-chip" data-per="7">7 giorni</div>
+        <div class="per-chip" data-per="30">30 giorni</div>
+        <div class="per-chip" data-per="mese">Questo mese</div>
+        <div class="per-chip on" data-per="tutto">Da sempre</div>
+      </div>
       <div id="stats-content"></div>
       <button class="btn btn-ghost" id="export-fattura" style="margin-top:8px">⬇︎ Elenco venduto (Excel)</button>
       <button class="btn btn-ghost" id="export-clienti">⬇︎ Registro clienti (Excel)</button>
@@ -811,81 +834,144 @@ function countBy(arr,key){const c={};arr.forEach(x=>{const k=(typeof key==='func
 function toEntries(obj){return Object.keys(obj).map(k=>({label:k,val:obj[k]}));}
 function normCity(s){s=(s||'').trim();return s?s.charAt(0).toUpperCase()+s.slice(1).toLowerCase():'';}
 
+/* periodo selezionato per la scheda Statistiche */
+let statsPeriod='tutto';
+function isoShift(baseIso,n){const c=new Date(baseIso+'T12:00');c.setDate(c.getDate()+n);
+  return `${c.getFullYear()}-${String(c.getMonth()+1).padStart(2,'0')}-${String(c.getDate()).padStart(2,'0')}`;}
+function periodRange(period){
+  const today=oggiIT();
+  if(period==='oggi') return {from:today,to:today,prevFrom:isoShift(today,-1),prevTo:isoShift(today,-1),intro:'Oggi'};
+  if(period==='7')    return {from:isoShift(today,-6),to:today,prevFrom:isoShift(today,-13),prevTo:isoShift(today,-7),intro:'Negli ultimi 7 giorni'};
+  if(period==='30')   return {from:isoShift(today,-29),to:today,prevFrom:isoShift(today,-59),prevTo:isoShift(today,-30),intro:'Negli ultimi 30 giorni'};
+  if(period==='mese'){
+    const d=new Date(today+'T12:00'),y=d.getFullYear(),m=d.getMonth();
+    const iso=x=>`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`;
+    return {from:`${y}-${String(m+1).padStart(2,'0')}-01`,to:today,prevFrom:iso(new Date(y,m-1,1)),prevTo:iso(new Date(y,m,0)),intro:'Questo mese'};
+  }
+  return {from:null,to:null,prevFrom:null,prevTo:null,intro:'Da quando tieni il registro'};
+}
+function inRange(s,from,to){return (!from||s>=from)&&(!to||s<=to);}
+function aggDays(days){
+  const vend=[],manc=[]; let ing=0,acq=0;
+  days.forEach(d=>{ing+=(+d.ingressi||0);acq+=(+d.acquirenti||0);
+    (d.vendite||[]).filter(isVendita).forEach(v=>vend.push(v));
+    (d.mancate||[]).filter(isMancata).forEach(m=>manc.push(m));});
+  const fat=vend.reduce((s,v)=>s+(+v.prezzo||0),0);
+  return {n:days.length,ing,acq,pezzi:vend.length,fat,vend,manc,mancN:manc.length,
+    scont:acq?fat/acq:0,conv:ing?acq/ing*100:0,pps:acq?vend.length/acq:0};
+}
+/* badge ▲/▼ vs periodo precedente. invert=true → salire è negativo (mancate) */
+function deltaHtml(cur,prev,invert){
+  if(prev==null||prev===0)return '';
+  const p=Math.round((cur-prev)/prev*100);
+  if(p===0)return '<div class="delta flat">= vs prec.</div>';
+  const up=p>0, good=invert?!up:up;
+  return `<div class="delta ${good?'up':'down'}">${up?'▲':'▼'} ${Math.abs(p)}% vs prec.</div>`;
+}
+function kBox(v,l,delta){return `<div class="kpi-box"><div class="v">${v}</div><div class="l">${l}</div>${delta||''}</div>`;}
+function topOfObj(o){let best='',n=0;for(const k in o)if(o[k]>n){n=o[k];best=k;}return best;}
+
+/* resoconto scritto automatico, tono CRU LE */
+function resoconto(a,r,topMod,topCol,topMot){
+  if(!a.n)return `${r.intro} non è stata salvata nessuna giornata. Appena la commessa registra il primo giorno, qui troverai il racconto del periodo.`;
+  const p=[];
+  const visite = a.ing>0 ? `<b>${a.ing} visitatrici</b>` : `le clienti entrate`;
+  p.push(`${r.intro} il negozio ha accolto ${visite} in ${a.n} ${a.n===1?'giornata':'giornate'}.`);
+  if(a.acq>0){
+    const su = a.conv>0 ? ` — una su ${Math.max(1,Math.round(a.ing/a.acq))} è tornata a casa con un capo CRU LE` : '';
+    p.push(`<b>${a.acq}</b> ${a.acq===1?'ha scelto':'hanno scelto'} di portarsi via qualcosa${su}.`);
+  }
+  p.push(`Il valore raccolto è di <b>${eur(a.fat)}</b>${a.acq?`, con uno scontrino medio di <b>${eur(a.scont)}</b>`:''}.`);
+  if(topMod)p.push(`Il capo del cuore è stato <b>${topMod}</b>${topCol?` nella nuance <b>${topCol}</b>`:''}.`);
+  if(a.mancN>0)p.push(`${a.mancN===1?'È rimasta 1 occasione non colta':`Sono rimaste ${a.mancN} occasioni non colte`}${topMot?`, soprattutto per «${topMot}»`:''}: un segnale gentile su cosa curare.`);
+  return p.join(' ');
+}
+
 function renderStats(){
-  const days=JSON.parse(localStorage.getItem(LS_DAYS)||'[]');
+  const allDays=JSON.parse(localStorage.getItem(LS_DAYS)||'[]');
   const clienti=JSON.parse(localStorage.getItem(LS_CLI)||'[]').filter(c=>(c.nome&&c.nome.trim())||c.whatsapp||c.email||c.instagram);
   const box=$('#stats-content');
-  const allVend=[]; const allManc=[];
-  days.forEach(d=>{(d.vendite||[]).filter(isVendita).forEach(v=>allVend.push(v));(d.mancate||[]).filter(isMancata).forEach(m=>allManc.push(m));});
-
-  if(!days.length && !clienti.length){
+  if(!allDays.length && !clienti.length){
     box.innerHTML='<div class="empty">Ancora nessun dato.<br>Salva qualche giornata e registra clienti per vedere le statistiche.</div>';return;
   }
-  const fatTot=allVend.reduce((s,v)=>s+(+v.prezzo||0),0);
+  const r=periodRange(statsPeriod);
+  const selDays=allDays.filter(d=>inRange(d.data,r.from,r.to));
+  const prevDays=allDays.filter(d=>inRange(d.data,r.prevFrom,r.prevTo));
+  const a=aggDays(selDays), pv=aggDays(prevDays);
+  const hasPrev = statsPeriod!=='tutto';
 
-  // provenienza: da vendite + registro clienti
-  const provObj={};
-  allVend.forEach(v=>{const c=normCity(v.provenienza);if(c)provObj[c]=(provObj[c]||0)+1;});
-  clienti.forEach(v=>{const c=normCity(v.provenienza);if(c)provObj[c]=(provObj[c]||0)+1;});
+  // aggregazioni sul periodo
+  const modObj=countBy(a.vend.filter(v=>v.modello&&v.modello!=='Altro'),'modello');
+  const colObj=countBy(a.vend.filter(v=>v.colore),'colore');
+  const tagObj=countBy(a.vend.filter(v=>v.taglia),'taglia');
+  const revObj={}; a.vend.forEach(v=>{if(v.modello&&v.modello!=='Altro')revObj[v.modello]=(revObj[v.modello]||0)+(+v.prezzo||0);});
+  const motObj=countBy(a.manc,'motivo');
+  const provObj={}; a.vend.forEach(v=>{const c=normCity(v.provenienza);if(c)provObj[c]=(provObj[c]||0)+1;});
+  const topMod=topOfObj(modObj), topCol=topOfObj(colObj), topTag=topOfObj(tagObj), topMot=topOfObj(motObj);
 
-  // età (registro clienti)
+  // registro clienti (totale, senza data)
   const etaObj=countBy(clienti,'eta');
-  // best seller
-  const modObj=countBy(allVend.filter(v=>v.modello&&v.modello!=='Altro'),'modello');
-  const colObj=countBy(allVend.filter(v=>v.colore),'colore');
-  const tagObj=countBy(allVend.filter(v=>v.taglia),'taglia');
-  const topMod=topOfObj(modObj), topCol=topOfObj(colObj), topTag=topOfObj(tagObj);
-  // fatturato per modello
-  const revObj={}; allVend.forEach(v=>{if(v.modello&&v.modello!=='Altro')revObj[v.modello]=(revObj[v.modello]||0)+(+v.prezzo||0);});
-  // motivi mancate
-  const motObj=countBy(allManc,'motivo');
+  const provReg={}; clienti.forEach(c=>{const k=normCity(c.provenienza);if(k)provReg[k]=(provReg[k]||0)+1;});
   const consN=clienti.filter(c=>c.consenso).length;
 
-  box.innerHTML=`
+  const D=(c,p,inv)=>hasPrev?deltaHtml(c,p,inv):'';
+
+  let periodoHtml;
+  if(!selDays.length){
+    periodoHtml=`<div class="resoconto">${resoconto(a,r,'','','')}</div>`;
+  }else{
+    periodoHtml=`
+    <div class="resoconto">${resoconto(a,r,topMod,topCol,topMot)}</div>
+
     <div class="stat-hi">
-      <div class="kpi-box"><div class="v">${clienti.length}</div><div class="l">Clienti registrate</div></div>
-      <div class="kpi-box"><div class="v">${consN}</div><div class="l">Con consenso</div></div>
-      <div class="kpi-box"><div class="v">${days.length}</div><div class="l">Giornate</div></div>
-      <div class="kpi-box"><div class="v">${eur(fatTot)}</div><div class="l">Fatturato totale</div></div>
-      <div class="kpi-box"><div class="v">${allVend.length}</div><div class="l">Pezzi venduti</div></div>
-      <div class="kpi-box"><div class="v">${allManc.length}</div><div class="l">Mancate vendite</div></div>
+      ${kBox(a.n,'Giornate','')}
+      ${kBox(a.ing,'Ingressi',D(a.ing,pv.ing))}
+      ${kBox(a.acq,'Clienti',D(a.acq,pv.acq))}
+      ${kBox(eur(a.fat),'Fatturato',D(a.fat,pv.fat))}
+      ${kBox(a.pezzi,'Pezzi',D(a.pezzi,pv.pezzi))}
+      ${kBox(a.mancN,'Mancate',D(a.mancN,pv.mancN,true))}
+    </div>
+    <div class="stat-hi">
+      ${kBox(Math.round(a.conv)+'%','Conversione',D(a.conv,pv.conv))}
+      ${kBox(eur(a.scont),'Scontrino medio',D(a.scont,pv.scont))}
+      ${kBox(a.pps.toFixed(1),'Pezzi/scontrino',D(a.pps,pv.pps))}
     </div>
 
     <div class="stat-group"><h3>🏆 Best seller</h3>
       <div class="stat-hi">
-        <div class="kpi-box"><div class="v">${topMod||'—'}</div><div class="l">Modello top</div></div>
-        <div class="kpi-box"><div class="v">${topCol||'—'}</div><div class="l">Colore top</div></div>
-        <div class="kpi-box"><div class="v">${topTag||'—'}</div><div class="l">Taglia top</div></div>
+        ${kBox(topMod||'—','Modello top','')}
+        ${kBox(topCol||'—','Colore top','')}
+        ${kBox(topTag||'—','Taglia top','')}
       </div>
       ${barList(toEntries(modObj),'')}
     </div>
+    <div class="stat-group"><h3>💶 Fatturato per modello</h3>${barList(toEntries(revObj),'ar')}</div>
+    <div class="stat-group"><h3>🎨 Colori più venduti</h3>${barList(toEntries(colObj),'ar')}</div>
+    <div class="stat-group"><h3>📐 Taglie più vendute</h3>${barList(toEntries(tagObj),'aq')}</div>
+    <div class="stat-group"><h3>📍 Provenienza (da vendite)</h3>${barList(toEntries(provObj),'aq')}</div>
+    <div class="stat-group"><h3>🚫 Motivi di mancata vendita</h3>${barList(toEntries(motObj),'')}</div>`;
+  }
 
-    <div class="stat-group"><h3>💶 Fatturato per modello</h3>
-      ${barList(toEntries(revObj),'ar')}
+  box.innerHTML=`
+    ${periodoHtml}
+    <div class="stat-div"></div>
+    <div class="stat-group"><h3>👥 Registro clienti · totale</h3>
+      <p class="stat-sub">Il registro è cumulativo, non cambia con il periodo scelto.</p>
+      <div class="stat-hi">
+        ${kBox(clienti.length,'Clienti registrate','')}
+        ${kBox(consN,'Con consenso','')}
+        ${kBox(allDays.length,'Giornate totali','')}
+      </div>
     </div>
-
-    <div class="stat-group"><h3>📍 Provenienza clienti</h3>
-      ${barList(toEntries(provObj),'aq')}
-    </div>
-
-    <div class="stat-group"><h3>👤 Fascia d'età</h3>
-      ${barList(toEntries(etaObj),'ol')}
-    </div>
-
-    <div class="stat-group"><h3>🎨 Colori più venduti</h3>
-      ${barList(toEntries(colObj),'ar')}
-    </div>
-
-    <div class="stat-group"><h3>📐 Taglie più vendute</h3>
-      ${barList(toEntries(tagObj),'aq')}
-    </div>
-
-    <div class="stat-group"><h3>🚫 Motivi di mancata vendita</h3>
-      ${barList(toEntries(motObj),'')}
-    </div>
+    <div class="stat-group"><h3>👤 Fascia d'età</h3>${barList(toEntries(etaObj),'ol')}</div>
+    <div class="stat-group"><h3>📍 Provenienza (registro)</h3>${barList(toEntries(provReg),'aq')}</div>
   `;
 }
-function topOfObj(o){let best='',n=0;for(const k in o)if(o[k]>n){n=o[k];best=k;}return best;}
+/* selettore periodo */
+$$('#per-sel .per-chip').forEach(c=>c.onclick=()=>{
+  $$('#per-sel .per-chip').forEach(x=>x.classList.remove('on'));
+  c.classList.add('on'); statsPeriod=c.dataset.per; renderStats();
+});
 
 /* ================= EXPORT (CSV / Excel) ================= */
 const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
