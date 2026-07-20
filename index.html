@@ -130,6 +130,31 @@
     border:none; background:#fff; color:var(--terracotta); font-size:18px; cursor:pointer;
     box-shadow:var(--ombra); line-height:1; z-index:2;
   }
+  /* ---------- Capi multipli dentro una vendita ---------- */
+  .capi{display:flex; flex-direction:column; gap:10px}
+  .capo-item{
+    border:1px solid var(--linea); border-radius:10px; padding:32px 10px 10px;
+    background:#fff; position:relative;
+  }
+  .capo-head{position:absolute; top:9px; left:12px; font-size:11px; letter-spacing:.05em;
+    color:var(--roccia); text-transform:uppercase}
+  .capo-del{position:absolute; top:6px; right:6px; width:28px; height:28px; border-radius:50%;
+    border:none; background:var(--calce); color:var(--terracotta); font-size:16px; cursor:pointer;
+    box-shadow:var(--ombra); line-height:1; z-index:2}
+  .sale-total{text-align:right; font-size:14px; color:var(--terracotta); min-height:18px; margin-top:2px}
+
+  /* ---------- FAB scorciatoie ---------- */
+  .fab-wrap{position:fixed; right:16px; bottom:calc(84px + env(safe-area-inset-bottom));
+    z-index:70; display:flex; flex-direction:column; align-items:flex-end; gap:10px}
+  .fab-menu{display:none; flex-direction:column; gap:8px; align-items:flex-end}
+  .fab-wrap.open .fab-menu{display:flex}
+  .fab-item{display:flex; align-items:center; gap:8px; background:#fff; border:1px solid var(--linea);
+    color:var(--corteccia); border-radius:24px; padding:11px 16px; font-family:inherit; font-size:13.5px;
+    cursor:pointer; box-shadow:var(--ombra); white-space:nowrap}
+  .fab-main{width:60px; height:60px; border-radius:50%; border:none; background:var(--terracotta);
+    color:#fff; font-size:30px; cursor:pointer; box-shadow:0 4px 16px rgba(166,95,61,.42);
+    line-height:1; transition:transform .18s}
+  .fab-wrap.open .fab-main{transform:rotate(45deg)}
 
   /* ---------- Chips ---------- */
   .chips{display:flex; gap:6px; flex-wrap:wrap}
@@ -376,8 +401,7 @@
         <div class="per-chip on" data-per="tutto">Da sempre</div>
       </div>
       <div id="stats-content"></div>
-      <button class="btn btn-ghost" id="export-fattura" style="margin-top:8px">⬇︎ Elenco venduto (Excel)</button>
-      <button class="btn btn-ghost" id="export-clienti">⬇︎ Registro clienti (Excel)</button>
+      <button class="btn btn-ghost" id="export-stats" style="margin-top:8px">⬇︎ Scarica statistiche (periodo scelto)</button>
     </section>
   </div>
 
@@ -386,7 +410,14 @@
     <section class="card">
       <h2 class="sec-title"><span class="n">≡</span> Giornate salvate</h2>
       <div id="hist-list"></div>
-      <button class="btn btn-ghost" id="export-all" style="margin-top:8px">⬇︎ Riepilogo giornate (Excel)</button>
+    </section>
+
+    <section class="card">
+      <h2 class="sec-title"><span class="n">⬇︎</span> Scarica i dati</h2>
+      <p class="sub">Tre file pronti da archiviare o inviare al commercialista.</p>
+      <button class="btn btn-ghost" id="export-kpi">⬇︎ Riepilogo KPI giornate</button>
+      <button class="btn btn-ghost" id="export-fattura" style="margin-top:8px">⬇︎ Fatturato con SKU e prodotto (fattura)</button>
+      <button class="btn btn-ghost" id="export-clienti" style="margin-top:8px">⬇︎ Registro clienti</button>
     </section>
 
     <section class="card">
@@ -417,6 +448,16 @@
   <button class="btn btn-ghost" id="btn-nuova">Nuova</button>
   <button class="btn btn-ghost" id="btn-stampa">Stampa</button>
   <button class="btn btn-primary" id="btn-salva">Salva giornata</button>
+</div>
+
+<!-- ===== FAB scorciatoie: aggiungi al volo senza scorrere ===== -->
+<div class="fab-wrap" id="fab">
+  <div class="fab-menu">
+    <button class="fab-item" data-q="mancata">🚫 Mancata vendita</button>
+    <button class="fab-item" data-q="vendita">🛍 Vendita</button>
+    <button class="fab-item" data-q="cliente">♥ Cliente</button>
+  </div>
+  <button class="fab-main" id="fab-main" aria-label="Aggiungi rapido" title="Aggiungi rapido">＋</button>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -467,21 +508,31 @@ const MOTIVI=['Taglia esaurita','Colore non disponibile','Modello non disponibil
 function motivoOptions(sel){return '<option value="">—</option>'+MOTIVI.map(m=>`<option ${m===sel?'selected':''}>${m}</option>`).join('');}
 const SIZE_OPTS=sel=>'<option value="">—</option>'+[42,44,46,48,50].map(t=>`<option ${(''+t)===(''+(sel||''))?'selected':''}>${t}</option>`).join('');
 
-/* label di una vendita/mancata a partire dai dati */
-function prodLabel(v){
+/* label di un capo/mancata a partire dai dati */
+function itemLabel(v){
   if(v.modello && v.modello!=='Altro' && v.modello!=='') return [v.modello,v.colore,v.taglia].filter(Boolean).join(' · ');
   return v.articolo||'';
 }
+/* ---- una vendita = una cliente con 1+ capi ----
+   Nuova forma: {capi:[{modello,colore,taglia,prezzo,sku,articolo}], tipo,cliente,provenienza,contatto,ora}
+   Forma vecchia (retro-compatibile): campi capo direttamente sulla vendita. */
+const capoFilled=i=>!!((i.modello&&i.modello!==''&&i.modello!=='Altro')||(i.articolo&&(''+i.articolo).trim())||(+i.prezzo>0));
+function saleItems(v){
+  if(Array.isArray(v.capi)) return v.capi;
+  return [{modello:v.modello,colore:v.colore,taglia:v.taglia,prezzo:v.prezzo,sku:v.sku,articolo:v.articolo}];
+}
+const saleTotal=v=>saleItems(v).reduce((s,i)=>s+(+i.prezzo||0),0);
+const salePezzi=v=>saleItems(v).filter(capoFilled).length;
 
 /* ---------- Tabs ---------- */
-$$('.tab').forEach(t=>t.onclick=()=>{
-  $$('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');
+function activateTab(view){
+  $$('.tab').forEach(x=>x.classList.toggle('active',x.dataset.view===view));
   $$('.view').forEach(v=>v.classList.remove('active'));
-  $('#view-'+t.dataset.view).classList.add('active');
-  if(t.dataset.view==='storico')renderHist();
-  if(t.dataset.view==='stats')renderStats();
-  window.scrollTo(0,0);
-});
+  $('#view-'+view).classList.add('active');
+  if(view==='storico')renderHist();
+  if(view==='stats')renderStats();
+}
+$$('.tab').forEach(t=>t.onclick=()=>{activateTab(t.dataset.view);window.scrollTo(0,0);});
 
 /* ---------- Chips (single select, intestazione) ---------- */
 function initChips(root){
@@ -497,18 +548,47 @@ function setChip(root,val){root.querySelectorAll('.chip').forEach(x=>x.classList
 initChips($('[data-chip="affluenza"]'));
 
 /* ================= RIGHE DINAMICHE ================= */
-function venditaRow(d={}){
-  const el=document.createElement('div');el.className='row-item';el.dataset.type='vendita';
+/* ---- un capo dentro una vendita (modello→colore→taglia→SKU→prezzo) ---- */
+function capoItem(d={}){
+  const el=document.createElement('div');el.className='capo-item';
   el.innerHTML=`
-    <button class="del" title="Rimuovi">×</button>
+    <div class="capo-head">Capo</div>
+    <button type="button" class="capo-del" title="Rimuovi capo">×</button>
     <div class="grid">
-      <div class="field"><label>Ora</label><input type="time" data-f="ora" value="${esc(d.ora)}"></div>
-      <div class="field"><label>Prezzo €</label><input type="number" inputmode="decimal" data-f="prezzo" min="0" step="0.01" placeholder="0" value="${esc(d.prezzo)}"></div>
       <div class="field full"><label>Modello</label><select data-f="modello">${modelloOptions(d.modello)}</select></div>
       <div class="field cat-field"><label>Colore</label><select data-f="colore"></select></div>
       <div class="field cat-field"><label>Taglia</label><select data-f="taglia"></select></div>
-      <div class="field full cat-field"><label>SKU (generato)</label><input type="text" data-f="sku" readonly placeholder="—" value="${esc(d.sku)}"></div>
       <div class="field full altro-field"><label>Articolo (altro / accessorio)</label><input type="text" data-f="articolo" placeholder="es. Borsa rafia, gioiello…" value="${esc(d.articolo)}"></div>
+      <div class="field cat-field"><label>SKU (generato)</label><input type="text" data-f="sku" readonly placeholder="—" value="${esc(d.sku)}"></div>
+      <div class="field"><label>Prezzo €</label><input type="number" inputmode="decimal" data-f="prezzo" min="0" step="0.01" placeholder="0" value="${esc(d.prezzo)}"></div>
+    </div>`;
+  const modSel=el.querySelector('[data-f=modello]');
+  const colSel=el.querySelector('[data-f=colore]');
+  const tagSel=el.querySelector('[data-f=taglia]');
+  const prz=el.querySelector('[data-f=prezzo]');
+  if(d.prezzo)prz.dataset.touched='1';
+  syncCat(el, d.colore, d.taglia, false);
+  modSel.addEventListener('change',()=>{ prz.dataset.touched=''; syncCat(el,'','',true); recalc();saveDraft(); });
+  colSel.addEventListener('change',()=>{ syncCat(el,colSel.value,'',false); recalc();saveDraft(); });
+  tagSel.addEventListener('change',()=>{ updateSku(el); recalc();saveDraft(); });
+  prz.addEventListener('input',()=>{ prz.dataset.touched='1'; recalc();saveDraft(); });
+  el.querySelector('[data-f=articolo]').addEventListener('input',()=>{recalc();saveDraft();});
+  el.querySelector('.capo-del').onclick=()=>{
+    const capiBox=el.closest('.capi'); el.remove();
+    if(!capiBox.querySelector('.capo-item'))capiBox.appendChild(capoItem());
+    recalc();saveDraft();
+  };
+  return el;
+}
+function venditaRow(d={}){
+  const el=document.createElement('div');el.className='row-item';el.dataset.type='vendita';
+  el.innerHTML=`
+    <button class="del" title="Rimuovi vendita">×</button>
+    <div class="field" style="margin-bottom:12px"><label>Ora</label><input type="time" data-sf="ora" value="${esc(d.ora)}"></div>
+    <div class="capi"></div>
+    <button type="button" class="btn btn-add capo-add" style="margin:10px 0 4px">＋ Aggiungi capo (stessa cliente)</button>
+    <div class="sale-total"></div>
+    <div class="grid" style="margin-top:12px">
       <div class="field"><label>Vendita</label>
         <div class="chips" data-onef="tipo">
           <div class="chip tc ${d.tipo==='Pieno'?'on':''}" data-val="Pieno">Pieno</div>
@@ -519,14 +599,28 @@ function venditaRow(d={}){
           <div class="chip ${d.cliente==='Nuova'?'on':''}" data-val="Nuova">Nuova</div>
           <div class="chip ${d.cliente==='Abituale'?'on':''}" data-val="Abituale">Abituale</div>
         </div></div>
-      <div class="field"><label>Provenienza</label><input type="text" data-f="provenienza" placeholder="Città" value="${esc(d.provenienza)}"></div>
+      <div class="field"><label>Provenienza</label><input type="text" data-sf="provenienza" placeholder="Città" value="${esc(d.provenienza)}"></div>
       <div class="field"><label>Contatto salvato?</label>
         <div class="chips" data-onef="contatto">
           <div class="chip ${d.contatto==='Sì'?'on':''}" data-val="Sì">Sì</div>
           <div class="chip ${d.contatto==='No'?'on':''}" data-val="No">No</div>
         </div></div>
     </div>`;
-  wireCatRow(el,d,true);
+  const capiBox=el.querySelector('.capi');
+  // retro-compatibilità: vendita vecchia (campi capo diretti) = un solo capo
+  const capi = (Array.isArray(d.capi)&&d.capi.length) ? d.capi
+    : [{modello:d.modello,colore:d.colore,taglia:d.taglia,prezzo:d.prezzo,sku:d.sku,articolo:d.articolo}];
+  capi.forEach(c=>capiBox.appendChild(capoItem(c)));
+  el.querySelector('.del').onclick=()=>{el.remove();recalc();saveDraft();};
+  el.querySelector('.capo-add').onclick=()=>{capiBox.appendChild(capoItem());recalc();saveDraft();};
+  el.querySelector('[data-sf=ora]').addEventListener('input',saveDraft);
+  el.querySelector('[data-sf=provenienza]').addEventListener('input',()=>{recalc();saveDraft();});
+  el.querySelectorAll('[data-onef]').forEach(g=>g.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
+    const on=c.classList.contains('on');
+    g.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));
+    if(!on)c.classList.add('on');
+    recalc();saveDraft();
+  }));
   return el;
 }
 function mancataRow(d={}){
@@ -542,30 +636,17 @@ function mancataRow(d={}){
       <div class="field full"><label>Motivo principale</label><select data-f="motivo">${motivoOptions(d.motivo)}</select></div>
       <div class="field full"><label>Nota / follow-up</label><input type="text" data-f="nota" value="${esc(d.nota)}"></div>
     </div>`;
-  wireCatRow(el,d,false);
-  return el;
-}
-/* cablaggio comune delle righe con modello→colore→taglia */
-function wireCatRow(el,d,isVend){
   const modSel=el.querySelector('[data-f=modello]');
   const colSel=el.querySelector('[data-f=colore]');
-  const prz=el.querySelector('[data-f=prezzo]');
   const tagSel=el.querySelector('[data-f=taglia]');
   syncCat(el, d.colore, d.taglia, false);
-  modSel.addEventListener('change',()=>{ if(prz)prz.dataset.touched=''; syncCat(el,'','',true); recalc();saveDraft(); });
+  modSel.addEventListener('change',()=>{ syncCat(el,'','',false); recalc();saveDraft(); });
   colSel.addEventListener('change',()=>{ syncCat(el,colSel.value,'',false); recalc();saveDraft(); });
   tagSel.addEventListener('change',()=>{ updateSku(el); recalc();saveDraft(); });
-  if(prz)prz.addEventListener('input',()=>prz.dataset.touched='1');
-  // generic wiring
   el.querySelector('.del').onclick=()=>{el.remove();recalc();saveDraft();};
-  el.querySelectorAll('[data-onef]').forEach(g=>g.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
-    const on=c.classList.contains('on');
-    g.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));
-    if(!on)c.classList.add('on');
-    recalc();saveDraft();
-  }));
-  el.querySelectorAll('input,textarea').forEach(i=>i.addEventListener('input',()=>{recalc();saveDraft();}));
-  el.querySelectorAll('select[data-f=motivo]').forEach(i=>i.addEventListener('change',()=>{recalc();saveDraft();}));
+  el.querySelectorAll('input').forEach(i=>i.addEventListener('input',()=>{recalc();saveDraft();}));
+  el.querySelector('[data-f=motivo]').addEventListener('change',()=>{recalc();saveDraft();});
+  return el;
 }
 /* popola colore/taglia (e prezzo per le vendite) in base al modello scelto */
 function syncCat(el, wantColore, wantTaglia, setPrice){
@@ -668,12 +749,22 @@ $('#add-cliente').onclick=()=>{$('#clienti').appendChild(clienteRow());saveClien
 /* ---------- Collect ---------- */
 function rowData(el){const o={};el.querySelectorAll('[data-f]').forEach(i=>{o[i.dataset.f]=i.type==='checkbox'?i.checked:i.value;});
   el.querySelectorAll('[data-onef]').forEach(g=>{const c=g.querySelector('.chip.on');o[g.dataset.onef]=c?c.dataset.val:'';});return o;}
+/* dati di una vendita: capi annidati + campi cliente (data-sf) + chip (data-onef) */
+function saleData(el){
+  const capi=[...el.querySelectorAll('.capo-item')].map(c=>{
+    const o={};c.querySelectorAll('[data-f]').forEach(i=>o[i.dataset.f]=i.value);return o;
+  });
+  const o={capi};
+  el.querySelectorAll('[data-sf]').forEach(i=>o[i.dataset.sf]=i.value);
+  el.querySelectorAll('[data-onef]').forEach(g=>{const c=g.querySelector('.chip.on');o[g.dataset.onef]=c?c.dataset.val:'';});
+  return o;
+}
 function getScheda(){
   return {
     data:$('#data').value, orario:$('#orario').value,
     meteo:$('#meteo').value, affluenza:chipVal($('[data-chip="affluenza"]')),
     ingressi:+$('#ingressi').value||0, acquirenti:+$('#acquirenti').value||0,
-    vendite:$$('#vendite .row-item').map(rowData),
+    vendite:$$('#vendite .row-item').map(saleData),
     mancate:$$('#mancate .row-item').map(rowData),
     chiusura:{
       richiesto:$('#c-richiesto').value, motivo:$('#c-motivo').value,
@@ -684,10 +775,7 @@ function getScheda(){
 }
 
 /* ---------- filtri "riga compilata" ---------- */
-const isVendita=v=>{
-  const cat = v.modello && v.modello!=='' && v.modello!=='Altro';
-  return !!(cat || (v.articolo&&v.articolo.trim()) || (+v.prezzo>0));
-};
+const isVendita=v=>saleItems(v).some(capoFilled);
 const isMancata=v=>!!((v.modello&&v.modello!=='') || (v.articolo&&v.articolo.trim()) || (v.motivo&&v.motivo!==''));
 
 /* ---------- Recalc KPI + chiusura automatica ---------- */
@@ -696,10 +784,16 @@ function topOf(arr){ // elemento più frequente di un array di stringhe
   let best='',n=0; for(const k in c) if(c[k]>n){n=c[k];best=k;} return best;
 }
 function recalc(){
-  const vend=$$('#vendite .row-item').map(rowData).filter(isVendita);
+  let pezzi=0, fat=0; const items=[];
+  $$('#vendite .row-item').forEach(el=>{
+    const v=saleData(el);
+    const filled=saleItems(v).filter(capoFilled);
+    const t=saleTotal(v);
+    const tt=el.querySelector('.sale-total');
+    if(tt)tt.textContent=filled.length?`${filled.length} capo${filled.length>1?'i':''} · ${eur(t)}`:'';
+    if(filled.length){pezzi+=filled.length; fat+=t; filled.forEach(i=>items.push(i));}
+  });
   const manc=$$('#mancate .row-item').map(rowData).filter(isMancata);
-  const pezzi=vend.length;
-  const fat=vend.reduce((s,v)=>s+(+v.prezzo||0),0);
   const acq=+$('#acquirenti').value||0;
   const ing=+$('#ingressi').value||0;
   const cont=$$('#clienti .row-item').filter(el=>{
@@ -715,7 +809,7 @@ function recalc(){
   $('#k-cont').textContent=cont;
   $('#k-mv').textContent=manc.length;
   // chiusura automatica (modificabile)
-  autoFill('#c-richiesto', topOf(vend.map(prodLabel)) || topOf(manc.map(prodLabel)));
+  autoFill('#c-richiesto', topOf(items.map(itemLabel)) || topOf(manc.map(itemLabel)));
   autoFill('#c-motivo', topOf(manc.map(v=>v.motivo)));
 }
 function autoFill(sel,val){const el=$(sel); if(el.dataset.manual==='1')return; el.value=val||'';}
@@ -764,8 +858,8 @@ $('#btn-salva').onclick=()=>{
   if(!s.data){toast('Inserisci la data');return;}
   s.vendite=s.vendite.filter(isVendita);
   s.mancate=s.mancate.filter(isMancata);
-  const fat=s.vendite.reduce((a,v)=>a+(+v.prezzo||0),0);
-  s.fatturato=fat;s.pezzi=s.vendite.length;s.savedAt=new Date().toISOString();
+  const fat=s.vendite.reduce((a,v)=>a+saleTotal(v),0);
+  s.fatturato=fat;s.pezzi=s.vendite.reduce((a,v)=>a+salePezzi(v),0);s.savedAt=new Date().toISOString();
   const days=JSON.parse(localStorage.getItem(LS_DAYS)||'[]');
   const i=days.findIndex(d=>d.data===s.data);
   if(i>=0)days[i]=s;else days.push(s);
@@ -854,7 +948,8 @@ function inRange(s,from,to){return (!from||s>=from)&&(!to||s<=to);}
 function aggDays(days){
   const vend=[],manc=[]; let ing=0,acq=0;
   days.forEach(d=>{ing+=(+d.ingressi||0);acq+=(+d.acquirenti||0);
-    (d.vendite||[]).filter(isVendita).forEach(v=>vend.push(v));
+    (d.vendite||[]).filter(isVendita).forEach(v=>
+      saleItems(v).filter(capoFilled).forEach(i=>vend.push({...i,provenienza:v.provenienza,tipo:v.tipo,cliente:v.cliente})));
     (d.mancate||[]).filter(isMancata).forEach(m=>manc.push(m));});
   const fat=vend.reduce((s,v)=>s+(+v.prezzo||0),0);
   return {n:days.length,ing,acq,pezzi:vend.length,fat,vend,manc,mancN:manc.length,
@@ -975,63 +1070,129 @@ $$('#per-sel .per-chip').forEach(c=>c.onclick=()=>{
 
 /* ================= EXPORT (CSV / Excel) ================= */
 const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+/* data per i nomi file, formato G-M-A (le / non sono ammesse nei nomi file) */
+function fnDate(){const [y,m,d]=oggiIT().split('-');return `${d}-${m}-${y}`;}
 function dl(text,name){
   const blob=new Blob(['﻿'+text],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();
 }
-/* riepilogo per giornata */
-$('#export-all').onclick=()=>{
+/* riepilogo giornate — TRASPOSTO: le date in riga di intestazione, le voci in colonna.
+   Date sempre G/M/A. Mancate vendite in dettaglio + motivo principale; feedback per intero. */
+$('#export-kpi').onclick=()=>{
   const days=JSON.parse(localStorage.getItem(LS_DAYS)||'[]');
   if(!days.length){toast('Niente da esportare');return;}
-  let csv='Data;Orario;Meteo;Affluenza;Ingressi;Clienti acquirenti;Pezzi venduti;Fatturato;Scontrino medio;Pezzi per scontrino;Conversione %;Mancate vendite;Prodotto piu richiesto;Motivo n.1 mancata;Feedback;Idee strategiche;Note design;Azione domani\n';
-  days.forEach(d=>{
-    const acq=d.acquirenti||0,ing=d.ingressi||0,fat=d.fatturato||0,pz=d.pezzi||0,c=d.chiusura||{};
-    csv+=[d.data,d.orario,d.meteo,d.affluenza,ing,acq,pz,fat.toFixed(2),
-      acq?(fat/acq).toFixed(2):'',acq?(pz/acq).toFixed(1):'',ing?Math.round(acq/ing*100):'',
-      (d.mancate||[]).length,c.richiesto,c.motivo,c.feedback,c.strategia,c.design,c.azione
-    ].map(q).join(';')+'\n';
-  });
-  dl(csv,'CRU_LE_Riepilogo_'+new Date().toISOString().slice(0,10)+'.csv');
-  toast('Esportato ✓');
+  const ds=[...days].sort((a,b)=>a.data.localeCompare(b.data)); // dalla più vecchia
+  const mancateDetail=d=>(d.mancate||[]).map(m=>{
+    const prod=itemLabel(m)||m.articolo||'';
+    const base=[prod,m.motivo].filter(Boolean).join(' — ')||'(senza dettaglio)';
+    return base+(m.nota?` (${m.nota})`:'');
+  }).filter(Boolean).join('\n');
+  const F=[
+    ['Data', d=>fmtDate(d.data)],
+    ['Orario / turno', d=>d.orario||''],
+    ['Meteo', d=>d.meteo||''],
+    ['Affluenza', d=>d.affluenza||''],
+    ['Ingressi', d=>d.ingressi||0],
+    ['Clienti acquirenti', d=>d.acquirenti||0],
+    ['Pezzi venduti', d=>d.pezzi||0],
+    ['Fatturato €', d=>(d.fatturato||0).toFixed(2)],
+    ['Scontrino medio €', d=>d.acquirenti?((d.fatturato||0)/d.acquirenti).toFixed(2):''],
+    ['Pezzi/scontrino', d=>d.acquirenti?((d.pezzi||0)/d.acquirenti).toFixed(1):''],
+    ['Conversione %', d=>d.ingressi?Math.round((d.acquirenti||0)/d.ingressi*100):''],
+    ['Mancate vendite (n)', d=>(d.mancate||[]).length],
+    ['Prodotto più richiesto', d=>(d.chiusura||{}).richiesto||''],
+    ['Motivi mancate (dettaglio)', mancateDetail],
+    ['Motivo principale', d=>(d.chiusura||{}).motivo||''],
+    ['Feedback clienti', d=>(d.chiusura||{}).feedback||''],
+    ['Idee strategiche', d=>(d.chiusura||{}).strategia||''],
+    ['Note design', d=>(d.chiusura||{}).design||''],
+    ['Azione per domani', d=>(d.chiusura||{}).azione||''],
+  ];
+  let csv=[q('Voce'),...ds.map(d=>q(fmtDate(d.data)))].join(';')+'\n';
+  F.forEach(([lab,fn])=>{ csv+=[q(lab),...ds.map(d=>q(fn(d)))].join(';')+'\n'; });
+  dl(csv,'CRU_LE_Riepilogo_'+fnDate()+'.csv');
+  toast('Riepilogo esportato ✓');
 };
-/* elenco tipo fattura: una riga per pezzo venduto */
+/* elenco tipo fattura: una riga per pezzo venduto (con SKU e prodotto) */
 $('#export-fattura').onclick=()=>{
   const days=JSON.parse(localStorage.getItem(LS_DAYS)||'[]');
   const rows=[];
-  days.forEach(d=>(d.vendite||[]).filter(isVendita).forEach(v=>{
-    const sku=skuOf(v.modello,v.colore,v.taglia)||v.sku||'';
-    rows.push([sku,d.data,v.ora,(v.modello&&v.modello!=='Altro')?v.modello:(v.articolo||''),v.colore,v.taglia,
-      (+v.prezzo||0).toFixed(2),v.tipo,v.cliente,v.provenienza,v.contatto]);
-  }));
+  days.forEach(d=>(d.vendite||[]).filter(isVendita).forEach(v=>
+    saleItems(v).filter(capoFilled).forEach(i=>{
+      const sku=skuOf(i.modello,i.colore,i.taglia)||i.sku||'';
+      rows.push([sku,fmtDate(d.data),v.ora,(i.modello&&i.modello!=='Altro')?i.modello:(i.articolo||''),i.colore,i.taglia,
+        (+i.prezzo||0).toFixed(2),v.tipo,v.cliente,v.provenienza,v.contatto]);
+    })));
   if(!rows.length){toast('Nessun venduto da esportare');return;}
   let csv='SKU;Data;Ora;Modello/Articolo;Colore;Taglia;Prezzo;Vendita;Cliente;Provenienza;Contatto salvato\n';
   rows.forEach(r=>csv+=r.map(q).join(';')+'\n');
   const tot=rows.reduce((s,r)=>s+parseFloat(r[6]||0),0);
-  csv+=['TOTALE',';;;;;'+tot.toFixed(2)].join(';')+'\n';
-  dl(csv,'CRU_LE_Venduto_'+new Date().toISOString().slice(0,10)+'.csv');
-  toast('Elenco venduto esportato ✓');
+  csv+=['TOTALE','','','','','',tot.toFixed(2),'','','',''].map(q).join(';')+'\n';
+  dl(csv,'CRU_LE_Fatturato_'+fnDate()+'.csv');
+  toast('Elenco fatturato esportato ✓');
 };
+/* download delle statistiche del periodo scelto */
+function exportStats(){
+  const allDays=JSON.parse(localStorage.getItem(LS_DAYS)||'[]');
+  const clienti=JSON.parse(localStorage.getItem(LS_CLI)||'[]').filter(c=>(c.nome&&c.nome.trim())||c.whatsapp||c.email||c.instagram);
+  if(!allDays.length && !clienti.length){toast('Niente da esportare');return;}
+  const r=periodRange(statsPeriod);
+  const a=aggDays(allDays.filter(d=>inRange(d.data,r.from,r.to)));
+  const modObj=countBy(a.vend.filter(v=>v.modello&&v.modello!=='Altro'),'modello');
+  const colObj=countBy(a.vend.filter(v=>v.colore),'colore');
+  const tagObj=countBy(a.vend.filter(v=>v.taglia),'taglia');
+  const revObj={}; a.vend.forEach(v=>{if(v.modello&&v.modello!=='Altro')revObj[v.modello]=(revObj[v.modello]||0)+(+v.prezzo||0);});
+  const motObj=countBy(a.manc,'motivo');
+  const provObj={}; a.vend.forEach(v=>{const c=normCity(v.provenienza);if(c)provObj[c]=(provObj[c]||0)+1;});
+  const etaObj=countBy(clienti,'eta');
+  const provReg={}; clienti.forEach(c=>{const k=normCity(c.provenienza);if(k)provReg[k]=(provReg[k]||0)+1;});
+  const L=[];
+  const line=(k,v)=>L.push(q(k)+';'+q(v==null?'':v));
+  const sec=t=>{L.push('');L.push(q(t)+';');};
+  const dump=(o,dec)=>{const e=toEntries(o).sort((x,y)=>y.val-x.val);
+    if(!e.length){L.push(q('—')+';');return;} e.forEach(x=>line(x.label,dec?x.val.toFixed(2):x.val));};
+  line('CRU LE — Statistiche', r.intro);
+  line('Generato il', fmtDate(oggiIT()));
+  sec('KPI del periodo');
+  line('Giornate', a.n); line('Ingressi', a.ing); line('Clienti acquirenti', a.acq);
+  line('Fatturato €', a.fat.toFixed(2)); line('Scontrino medio €', a.acq?a.scont.toFixed(2):'');
+  line('Pezzi venduti', a.pezzi); line('Pezzi/scontrino', a.acq?a.pps.toFixed(1):'');
+  line('Conversione %', a.ing?Math.round(a.conv):''); line('Mancate vendite', a.mancN);
+  sec('Best seller — Modelli (pezzi)'); dump(modObj);
+  sec('Fatturato per modello €'); dump(revObj,true);
+  sec('Colori più venduti (pezzi)'); dump(colObj);
+  sec('Taglie più vendute (pezzi)'); dump(tagObj);
+  sec('Provenienza (da vendite)'); dump(provObj);
+  sec('Motivi di mancata vendita'); dump(motObj);
+  sec('Registro clienti (cumulativo)');
+  line('Clienti registrate', clienti.length); line('Con consenso', clienti.filter(c=>c.consenso).length);
+  sec("Fascia d'età (registro)"); dump(etaObj);
+  sec('Provenienza (registro)'); dump(provReg);
+  dl(L.join('\n'),'CRU_LE_Statistiche_'+fnDate()+'.csv');
+  toast('Statistiche esportate ✓');
+}
+$('#export-stats').onclick=exportStats;
 /* registro clienti — CSV riusabile */
 function csvClienti(){
   const clienti=JSON.parse(localStorage.getItem(LS_CLI)||'[]').filter(c=>(c.nome&&c.nome.trim())||c.whatsapp||c.email||c.instagram);
   let csv='Data;Nome;Consenso;WhatsApp;Email;Instagram;Stato;Fascia eta;Taglia intero;Taglia top;Taglia slip;Preferenze;Bisogni;Acquisti;Provenienza;Canale;Follow-up\n';
-  clienti.forEach(c=>{csv+=[c.data,c.nome,c.consenso?'Sì':'No',c.whatsapp,c.email,c.instagram,c.stato,c.eta,
+  clienti.forEach(c=>{csv+=[fmtDate(c.data),c.nome,c.consenso?'Sì':'No',c.whatsapp,c.email,c.instagram,c.stato,c.eta,
     c.tagliaIntero,c.tagliaTop,c.tagliaSlip,c.preferenze,c.bisogni,c.acquisti,c.provenienza,c.canale,c.followup].map(q).join(';')+'\n';});
   return {csv, n:clienti.length};
 }
 function scaricaClienti(){
   const {csv,n}=csvClienti();
   if(!n){toast('Registro vuoto');return false;}
-  dl(csv,'CRU_LE_Clienti_'+oggiIT()+'.csv');
+  dl(csv,'CRU_LE_Clienti_'+fnDate()+'.csv');
   markBackup();toast(n+' client'+(n===1?'e':'i')+' salvate ✓');
   return true;
 }
 $('#export-clienti').onclick=scaricaClienti;
 $('#bk-clienti').onclick=scaricaClienti;
 $('#export-tutto').onclick=()=>{
-  $('#export-all').click();            // riusa l'export riepilogo giornate
+  $('#export-kpi').click();            // riusa l'export riepilogo giornate
   const {csv,n}=csvClienti();
-  if(n)dl(csv,'CRU_LE_Clienti_'+oggiIT()+'.csv');
+  if(n)dl(csv,'CRU_LE_Clienti_'+fnDate()+'.csv');
   markBackup();
 };
 
@@ -1056,7 +1217,7 @@ function renderBackupState(){
     btn.onclick=async()=>{
       const {csv,n}=csvClienti();
       if(!n){toast('Nessuna cliente da salvare');return;}
-      const file=new File(['﻿'+csv],'CRU_LE_Clienti_'+oggiIT()+'.csv',{type:'text/csv'});
+      const file=new File(['﻿'+csv],'CRU_LE_Clienti_'+fnDate()+'.csv',{type:'text/csv'});
       try{
         await navigator.share({files:[file],title:'Registro clienti CRU LE',text:'Backup registro clienti CRU LE'});
         markBackup();toast('Condiviso ✓');
@@ -1092,6 +1253,24 @@ const REVIEW_URL="https://search.google.com/local/writereview?placeid=ChIJ477KEp
 const QR_DATAURI="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAYMAAAGDAQMAAADzqu5RAAAABlBMVEVLPzT///+cfiXTAAACl0lEQVR42u2cu43DMAyG6XPhMiNkFI+WjOZRMoJKF0YU8Sk5XYoDaOBXcRAMs8kHPn6SPqo/nhfBAhawgAUsThYv0rPWshxyu7enb6rPtdZ9bvenvcEv/9GvBxb/aSFQbkKz8SqBkho4vfA7jFKYgmBSgrti4ssk4Gq/zOKMzU9nEMxPkMT1Hi2ucjitdeM3pgqCFyLIvPjwE3pskRBB8BJ5UAn2SqadYj6IPJiaoNeizRkt631fUIumJjhoi64mDouiuwbP/g5+3ax5UPWgUNroxjGTz+CDMwjmjaKL+ZehpHtx9xSmrTplsT+BYOI8yOWKFTAteLLrDbWNiH3VFyCYNw8yOFMTm+VBiaInWQGCOQkWExHmeo2getygL1CLZvdBDp7fRami1NqGvRJ5ML8PEpcrEk4XY1r6E+TBxD64z+F6Yx6UksYDLHwwtZo4bIS0h4g4htmEtmsIBDMTFNfrUdS7aqbxWWiAYO6ezFRjsNtrG53waq8bejB3LWpZz8OpNrRD2ksUhR5M3ZOxDszNsl4ETyJbt3ihL5p/wiuXUzOtbsOgEH3R7HlQPM71e/F1CxvfkypEEMysB6MnE1nP5oPaMoUezO2Dkux6X5S6V2otuvZIi183J0Hfipld/floXsFFgxQEcxKsx2nBSWb0UdJIHtQ+Gwjm98EY9cp8MHaACbOJ7D5o08BY9F3CB+e3vwqCiXsyPhbUsypTK0FPvVMQTNqTUXC150FvzsTONmrRS+xs+65atEP7qjYmvNf4dimKUmuv+fdotvIEgtkJUl954r+6ZaGZEV21qxDUhFj8SyVVE4+Q9iCYOg/WqlF0HfpsLgMxH7zKt0v28bVoB/8mtDdnQDC3HsR/jYAFLGABix8tPhmSPdpDUTZ1AAAAAElFTkSuQmCC";
 if($('#qr-img'))$('#qr-img').src=QR_DATAURI;
 if($('#apri-recensione'))$('#apri-recensione').href=REVIEW_URL;
+
+/* ---------- FAB scorciatoie: aggiungi al volo ---------- */
+const fab=$('#fab');
+$('#fab-main').onclick=()=>fab.classList.toggle('open');
+function quickAdd(kind){
+  if(kind==='cliente'){
+    activateTab('clienti');
+    const r=clienteRow();$('#clienti').appendChild(r);saveClienti();
+    setTimeout(()=>{r.scrollIntoView({behavior:'smooth',block:'center'});const n=r.querySelector('[data-f=nome]');if(n)n.focus();},80);
+    return;
+  }
+  activateTab('scheda');
+  const box=kind==='mancata'?$('#mancate'):$('#vendite');
+  const r=kind==='mancata'?mancataRow():venditaRow();
+  box.appendChild(r);recalc();saveDraft();
+  setTimeout(()=>r.scrollIntoView({behavior:'smooth',block:'center'}),80);
+}
+$$('.fab-item').forEach(b=>b.onclick=()=>{fab.classList.remove('open');quickAdd(b.dataset.q);});
 
 /* ---------- Init ---------- */
 loadDraft();loadClienti();renderBackupState();maybeNudge();
