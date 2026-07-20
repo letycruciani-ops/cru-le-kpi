@@ -473,7 +473,7 @@ function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');se
 /* ================= CATALOGO PRODOTTI (assortimento ufficiale SS26 · 13 modelli) =================
    SKU = prefisso modello + codice colore + taglia  (es. Paglia Nero 42 = PGN42)
    Prezzi: interi €130, top/slip €65 (da confermare). */
-const COLOR_CODE={'Nero':'N','Terra':'T','Sabbia':'SA','Blu':'B','Giallo':'G','Menta':'M','Arancio':'A','Menta/arancio':'MA','Terra/giallo':'TG','Sabbia/blu':'SB'};
+const COLOR_CODE={'Nero':'N','Terra':'T','Sabbia':'S','Blu':'B','Giallo':'G','Menta':'M','Arancio':'A','Menta/arancio':'MA','Terra/giallo':'TG','Sabbia/blu':'SB'};
 const S4=[42,44,46,48], S5=[42,44,46,48,50], S5b=[44,46,48,50];
 const CATALOG=[
   {m:'Paglia',   pre:'PG', tipo:'Costume intero', cat:'intero', prezzo:130, colori:{'Nero':S4,'Terra':S4,'Sabbia':S4}},
