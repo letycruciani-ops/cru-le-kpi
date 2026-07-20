@@ -696,7 +696,7 @@ function clienteRow(d={}){
       <span class="warn" data-role="warn" style="display:none"> · Contatto inserito senza consenso: spunta la casella per poterla ricontattare.</span>
     </div>
     <div class="grid">
-      <div class="field"><label>Data</label><input type="date" data-f="data" value="${esc(d.data||new Date().toISOString().slice(0,10))}"></div>
+      <div class="field"><label>Data</label><input type="date" data-f="data" value="${esc(d.data||oggiIT())}"></div>
       <div class="field"><label>Nome</label><input type="text" data-f="nome" value="${esc(d.nome)}"></div>
       <div class="field"><label>WhatsApp</label><input type="tel" inputmode="tel" data-f="whatsapp" placeholder="+39…" value="${esc(d.whatsapp)}"></div>
       <div class="field"><label>E-mail</label><input type="email" inputmode="email" data-f="email" placeholder="nome@…" value="${esc(d.email)}"></div>
@@ -829,7 +829,7 @@ $('#meteo').addEventListener('change',saveDraft);
 function saveDraft(){recalc();localStorage.setItem(LS_DRAFT,JSON.stringify(getScheda()));}
 function loadDraft(){
   const d=JSON.parse(localStorage.getItem(LS_DRAFT)||'null');
-  $('#data').value=(d&&d.data)||new Date().toISOString().slice(0,10);
+  $('#data').value=(d&&d.data)||oggiIT();
   if(d){
     $('#orario').value=d.orario||'';$('#meteo').value=d.meteo||'';
     setChip($('[data-chip="affluenza"]'),d.affluenza);
@@ -876,7 +876,7 @@ $('#btn-nuova').onclick=()=>{
   ['orario','ingressi','acquirenti','c-richiesto','c-motivo','c-feedback','c-strategia','c-design','c-azione'].forEach(id=>$('#'+id).value='');
   ['c-richiesto','c-motivo'].forEach(id=>$('#'+id).dataset.manual='');
   $('#meteo').value='';setChip($('[data-chip="affluenza"]'),'');
-  $('#data').value=new Date().toISOString().slice(0,10);
+  $('#data').value=oggiIT();
   syncCounter();
   $('#vendite').appendChild(venditaRow());recalc();saveDraft();toast('Nuova scheda');
 };
@@ -1007,7 +1007,6 @@ function renderStats(){
   // registro clienti (totale, senza data)
   const etaObj=countBy(clienti,'eta');
   const provReg={}; clienti.forEach(c=>{const k=normCity(c.provenienza);if(k)provReg[k]=(provReg[k]||0)+1;});
-  const consN=clienti.filter(c=>c.consenso).length;
 
   const D=(c,p,inv)=>hasPrev?deltaHtml(c,p,inv):'';
 
@@ -1051,10 +1050,9 @@ function renderStats(){
     ${periodoHtml}
     <div class="stat-div"></div>
     <div class="stat-group"><h3>👥 Registro clienti · totale</h3>
-      <p class="stat-sub">Il registro è cumulativo, non cambia con il periodo scelto.</p>
-      <div class="stat-hi">
+      <p class="stat-sub">Il registro è cumulativo, non cambia con il periodo scelto. Ogni cliente registrata ha dato il consenso.</p>
+      <div class="stat-hi" style="grid-template-columns:1fr 1fr">
         ${kBox(clienti.length,'Clienti registrate','')}
-        ${kBox(consN,'Con consenso','')}
         ${kBox(allDays.length,'Giornate totali','')}
       </div>
     </div>
@@ -1164,8 +1162,8 @@ function exportStats(){
   sec('Taglie più vendute (pezzi)'); dump(tagObj);
   sec('Provenienza (da vendite)'); dump(provObj);
   sec('Motivi di mancata vendita'); dump(motObj);
-  sec('Registro clienti (cumulativo)');
-  line('Clienti registrate', clienti.length); line('Con consenso', clienti.filter(c=>c.consenso).length);
+  sec('Registro clienti (cumulativo · tutte con consenso)');
+  line('Clienti registrate', clienti.length);
   sec("Fascia d'età (registro)"); dump(etaObj);
   sec('Provenienza (registro)'); dump(provReg);
   dl(L.join('\n'),'CRU_LE_Statistiche_'+fnDate()+'.csv');
